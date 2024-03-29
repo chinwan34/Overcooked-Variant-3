@@ -62,8 +62,8 @@ class OvercookedEnvironment(gym.Env):
         return '\n'.join(_display)
 
     def __eq__(self, other):
-        return self.repDQN_conv == other.repDQN_conv
-        # return self.get_repr() == other.get_repr() or self.repDQN_conv == other.repDQN_conv
+        # return self.repDQN_conv == other.repDQN_conv
+        return self.get_repr() == other.get_repr() or self.repDQN_conv == other.repDQN_conv
     
     def __hash__(self):
         return self.repDQN_conv.__hash__()

@@ -22,8 +22,8 @@ class DQNAgent:
         self.frequency = arglist.update_frequency
         self.current = 0
 
-        self.memory = UER_memory(self.maxCapacity)
         self.dlmodel = DLModel(self.st_size, self.action_size, self.dlmodel_name, arglist)
+        self.memory = UER_memory(self.maxCapacity)
 
         self.plausibleActions = []
 
@@ -50,16 +50,14 @@ class DQNAgent:
             return self.dlmodel.max_Q_action(state, self.plausibleActions)
 
     def epsilon_decay(self):
-        # self.current += 1
-        # if self.epsilon > self.epsilon_minimum:
-        #     self.epsilon = self.epsilon * self.epsilon_decay_rate
         self.current += 1
         if self.current < self.maxExplorationSteps:
             self.epsilon = (self.maxEpsilon - self.minEpsilon) * ((self.maxExplorationSteps - self.current)/self.maxExplorationSteps) + self.minEpsilon
     
-    def observeTransition(self, transition):
-        self.memory.store_transition(transition)
-    
+    def update_target(self):
+        if self.current % self.frequency == 0:
+            self.dlmodel.update_target()
+
     def y_i_update(self, batch_used):
         current_states = np.array([batch[0] for batch in batch_used])
         next_states = np.array([batch[3] for batch in batch_used])
@@ -70,7 +68,7 @@ class DQNAgent:
         y = np.zeros((len(batch_used), self.action_size))
         errors = np.zeros(len(batch_used))
 
-        for i in range(len(batch_used)):
+        for i in range(0, len(batch_used)):
             cState, actionSelected, reward, done = batch_used[i][0], batch_used[i][1][self.name], batch_used[i][2], batch_used[i][4]
 
             t = predict_current[i]
@@ -82,13 +80,9 @@ class DQNAgent:
             y[i] = t
             errors[i] = np.abs(t[actionSelected] - oldVal)
 
-        return [x, y, errors]
-    
-    def update_target(self):
-        if self.current % self.frequency == 0:
-            self.dlmodel.update_target()
-    
-    def replay(self):
+        return x, y, errors
+
+    def update_result(self):
         batch_used = self.memory.uniform_sample(self.batchSize)
         x, y, errors = self.y_i_update(batch_used)
         self.dlmodel.train_model(x, y)
@@ -99,10 +93,12 @@ class DQNAgent:
     
     def predict(self, state):
         return self.dlmodel.max_Q_action(state, self.plausibleActions)
+
+    def observeTransition(self, transition):
+        self.memory.store_transition(transition)
     
     def load_model_trained(self):
         self.dlmodel.non_test_weight_loading()
-        # return self.dlmodel.load_model_trained()
 
     
     

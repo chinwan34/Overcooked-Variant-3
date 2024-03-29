@@ -41,17 +41,14 @@ class mainAlgorithm:
                 next_state = np.array(next_state)
                 next_state = next_state.ravel()
 
-
                 for agent in agents:
                     agent.observeTransition((state, action_dict, reward, next_state, doneUsed))
-                    if all_step >= self.filling_step:
-                        agent.epsilon_decay()
-                        if step % self.replay_step == 0:
-                            agent.replay()
-                        agent.update_target()
+                    agent.epsilon_decay()
+                    if step % self.replay_step == 0:
+                        agent.update_result()
+                    agent.update_target()
                 
                 rewardTotal += reward
-                # previous_reward = reward
                 done = doneUsed
                 all_step += 1
                 step += 1
