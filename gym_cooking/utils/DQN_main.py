@@ -53,8 +53,6 @@ class mainAlgorithm:
                 all_step += 1
                 step += 1
                 state = next_state
-
-                # Render here maybe
             
             rewards.append(rewardTotal)
             time_steps.append(step)
