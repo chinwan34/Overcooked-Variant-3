@@ -449,21 +449,20 @@ class OvercookedEnvironment(gym.Env):
                 if doneCheck: reward += 20
             else:
                 reward -= 1
-            # start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
-            # subtask_action_obj = nav_utils.get_subtask_action_obj(subtask)
-            # distance = self.get_lower_bound_for_subtask_given_objs(
-            #     subtask, 
-            #     ["agent-1", "agent-2"],
-            #     start_obj,
-            #     goal_obj,
-            #     subtask_action_obj,
-            # )
-            # print(start_obj, goal_obj, distance)
-            # reward -= distance
+            start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
+            subtask_action_obj = nav_utils.get_subtask_action_obj(subtask)
+            distance = self.get_lower_bound_for_subtask_given_objs(
+                subtask, 
+                ["agent-1", "agent-2"],
+                start_obj,
+                goal_obj,
+                subtask_action_obj,
+            )
+            reward -= 0.3 * distance
 
             # bonus = self.holding_important_object(["agent-1", "agent-2"], subtask)
-            # bonus2 = self.role_bonus(["agent-1", "agent-2"], subtask)
-            # reward = reward + bonus + bonus2
+            bonus2 = self.role_bonus(["agent-1", "agent-2"], subtask)
+            reward = reward + bonus2
         
         return reward
 

@@ -34,7 +34,7 @@ Please try with pip3 / python3 if the following does not work on the machine.
 ```
 conda create -n OvercookedV3 python==3.7.16
 conda activate OvercookedV3
-python -m pip install -e.
+python -m pip install -e .
 cd gym_cooking
 ```
 
