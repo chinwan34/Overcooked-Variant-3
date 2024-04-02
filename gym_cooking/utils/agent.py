@@ -34,7 +34,7 @@ class RealAgent:
         self.name = name
         self.color = id_color
         self.recipes = recipes
-        self.role = role
+        self.role = role    # Role created
 
         # Bayesian Delegation.
         self.reset_subtasks()
@@ -93,12 +93,9 @@ class RealAgent:
             self.setup_subtasks(env=obs)
 
         # Select subtask based on Bayesian Delegation.
-        print("GO IN UPDATE SUBTASKS")
         self.update_subtasks(env=obs)
-        print("GOT THROUGH UPDATE SUBTASKS")
         self.new_subtask, self.new_subtask_agent_names = self.delegator.select_subtask(
                 agent_name=self.name, role=self.role)
-        print("SELECTED SUBTASK TO WORK WITH", self.name)
         self.plan(copy.copy(obs))
         return self.action
 
@@ -160,12 +157,10 @@ class RealAgent:
                 or (self.delegator.should_reset_priors(obs=copy.copy(env),
                             incomplete_subtasks=self.incomplete_subtasks))):
             self.reset_subtasks()
-            print("GO IN SET PRIORS")
             self.delegator.set_priors(
                     obs=copy.copy(env),
                     incomplete_subtasks=self.incomplete_subtasks,
                     priors_type=self.priors)
-            print("SET PRIORS COMPLETED")
         else:
             if self.subtask is None:
                 self.delegator.set_priors(
@@ -173,7 +168,6 @@ class RealAgent:
                     incomplete_subtasks=self.incomplete_subtasks,
                     priors_type=self.priors)
             else:
-                print("GO IN BAYES UPDATE")
                 self.delegator.bayes_update(
                         obs_tm1=copy.copy(env.obs_tm1),
                         actions_tm1=env.agent_actions,
@@ -190,6 +184,7 @@ class RealAgent:
         """Return location if agent takes its action---relevant for navigation planner."""
         return tuple(np.asarray(self.location) + np.asarray(self.action))
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def plan(self, env, initializing_priors=False):
         """Plan next action---relevant for navigation planner."""
         print('right before planning, {} had old subtask {}, new subtask {}, subtask complete {}'.format(self.name, self.subtask, self.new_subtask, self.subtask_complete))
@@ -198,16 +193,8 @@ class RealAgent:
         if self.new_subtask is not None:
             self.def_subtask_completion(env=env)
 
-        # If subtask is None, then do nothing.
+        # If subtask is None, choose Floor first
         if (self.new_subtask is None) or (not self.new_subtask_agent_names):
-            # actions = nav_utils.get_single_actions(env=env, agent=self)
-            # probs = []
-            # for a in actions:
-            #     if a == (0, 0):
-            #         probs.append(self.none_action_prob)
-            #     else:
-            #         probs.append((1.0-self.none_action_prob)/(len(actions)-1))
-            # self.action = actions[np.random.choice(len(actions), p=probs)]
             actions = [(0,1), (0,-1), (1,0), (-1,0)]
             actionThatWorks = []
             for a in actions:
@@ -215,6 +202,7 @@ class RealAgent:
                 if isinstance(nextLoc, Floor):
                     actionThatWorks.append(a)
                 elif not isinstance(nextLoc, Floor) and self.holding:
+                    # If holding, all actions are available
                     actionThatWorks.append(a)
 
             stay = True
@@ -224,6 +212,7 @@ class RealAgent:
             if stay:
                 actionThatWorks.append((0,0))
             self.action = random.choice(actionThatWorks)
+
         # Otherwise, plan accordingly.
         else:
             if self.model_type == 'greedy' or initializing_priors:
@@ -243,8 +232,6 @@ class RealAgent:
                     env=env, subtask=self.new_subtask,
                     subtask_agent_names=self.new_subtask_agent_names,
                     other_agent_planners=other_agent_planners)
-        
-            print("Got through ALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
             # If joint subtask, pick your part of the simulated joint plan.
             if self.name not in self.new_subtask_agent_names and self.planner.is_joint:
@@ -290,7 +277,7 @@ class SimAgent:
 
     def __init__(self, name, role, id_color, location):
         self.name = name
-        self.role = role
+        self.role = role    # Role created
         self.color = id_color
         self.location = location
         self.holding = None

@@ -20,7 +20,7 @@ class World:
         self.rep = [] # [row0, row1, ..., rown]
 
         self.repDQN = []
-        self.repDQN_Conv = None
+        self.repDQN_Conv = None # The current DQN representation
         self.arglist = arglist
         self.objects = defaultdict(lambda : [])
 
@@ -51,8 +51,16 @@ class World:
         #     self.add_object(obj, obj.location)
         return self.rep
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_dqn(self):
-        # self.repDQN = np.zeros((self.width, self.height, 3))
+        """
+        Update the DQN display with location as tuple,
+        currently archived, allowing another more outstanding
+        representation taking place (Below)
+
+        Return:
+            The list of all locations of the objects
+        """
         self.repDQN = []
         objs = []
         for o in self.objects.values():
@@ -62,7 +70,19 @@ class World:
             self.repDQN.append((y,x))
         return list(sum(self.repDQN, ()))
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_dqn_conv(self, width, height):
+        """
+        Update the width x height x 4 representation, which
+        input 1 into the environment representation if the object
+        is present in the particular type
+
+        Args:
+            width: Width of the representation grid
+            height: height of the representation grid
+        Return:
+            The 3D array for representation
+        """
         self.repDQN_conv = np.zeros((width, height, 4))
         objs = []
         for o in self.objects.values():
@@ -128,6 +148,7 @@ class World:
         # nx.draw(self.reachability_graph)
         # plt.show()
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_lower_bound_between(self, subtask, agent_locs, A_locs, B_locs):
         """Return distance lower bound between subtask-relevant locations."""
         lower_bound = self.perimeter + 1
@@ -335,7 +356,17 @@ class World:
 
         return objs[0]
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def is_object_at_location(self, location):
+        """
+        Check whether is Plate or Food or Object at a particular
+        location.
+
+        Args:
+            location: Location specified for search
+        Return:
+            Whether the location consists of the three types specified
+        """
         all_objs = self.get_object_list()
         objs = list(filter(lambda o: o.location == location and (isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate)), all_objs))
         if objs: return True
