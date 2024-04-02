@@ -561,7 +561,6 @@ class E2E_BRTDP:
             return None
         else:
             actions = self.get_actions(state_repr=cur_state.get_repr())
-            print("ACTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", actions)
             qvals = [self.Q(state=cur_state, action=a, value_f=self.v_l)
                     for a in actions]
             print([x for x in zip(actions, qvals)])
