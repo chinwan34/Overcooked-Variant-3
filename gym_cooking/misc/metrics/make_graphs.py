@@ -8,8 +8,6 @@ import itertools
 import pickle
 import sys
 sys.path.append("../..")
-import recipe_planner
-
 
 recipes = [
         "tomato",
@@ -158,7 +156,7 @@ def compute_stats(path_pickles, num_agents):
         print('     collisions: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_collisions)), np.std(np.array(num_collisions))/np.sqrt(len(num_collisions))))
         print('     shuffles: {:.3f} +/- {:.3f}'.format(np.mean(np.array(num_shuffles)), np.std(np.array(num_collisions))/np.sqrt(len(num_shuffles))))
 
-
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def import_data(key, path_pickles, num_agents):
     df = list()
 
@@ -252,9 +250,11 @@ def get_shuffles(data, recipe):
         shuffles[agent] = count
     return shuffles
 
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def plot_data(key, path_save, df, num_agents, legend=False):
     print('generating {} graphs'.format(key))
-    # hue_order = [model_key[l] for l in models]
+   
+    # Change hue_order to roles 
     hue_order = [role_key[l] for l in roles]
     dataAll = []
     color_palette = sns.color_palette()
@@ -271,24 +271,14 @@ def plot_data(key, path_save, df, num_agents, legend=False):
 
             if key == 'completion':
                 # plot ours last
-                # hue_order = hue_order[1:] + [hue_order[0]]
                 color_palette = sns.color_palette()[1:5] + [sns.color_palette()[0]]
-                # ax = sns.lineplot(x = 't', y = 'n', hue="model", data=data,
-                #     linewidth=5, legend=False, hue_order=hue_order, palette=color_palette)
                 ax = sns.lineplot(x = 't', y = 'n', hue="role", data=data,
                     linewidth=5, legend=False, hue_order=hue_order, palette=color_palette)
                 plt.xlabel('Steps')
                 plt.ylim([0, 1]),
                 plt.xlim([0, 75])
             else:
-                # hue_order = hue_order[1:] + [hue_order[0]]
                 color_palette = sns.color_palette()[1:5] + [sns.color_palette()[0]]
-                # sns.barplot(x='dummy', y=key, hue="model", data=data, hue_order=hue_order,\
-                #                 palette=color_palette, ci=68).set(
-                #     xlabel = "",
-                #     xticks = [],
-                #     ylim = ylims[key],
-                # )
                 sns.barplot(x='dummy', y=key, hue="role", data=data, hue_order=hue_order,\
                                 palette=color_palette, ci=68).set(
                     xlabel = "",
@@ -315,9 +305,11 @@ def plot_data(key, path_save, df, num_agents, legend=False):
             plt.savefig(os.path.join(path_save, "{}_{}_{}.png".format(key, recipe, map_)))
             plt.close()
 
+            # For legend printing.
             dataAll.append(data)
 
             print('   generated graph for {}, {}'.format(recipe, map_))
+    
     # Make Legend
     if arglist.legend:
         counter = 0
@@ -325,10 +317,8 @@ def plot_data(key, path_save, df, num_agents, legend=False):
             plt.figure(figsize=(10,10))
             if key == 'completion':
                 sns.barplot(x = 't', y = 'n', hue="role", data=data, hue_order=hue_order, palette=color_palette, ci=68).set()
-                # sns.barplot(x = 't', y = 'n', hue="model", data=data, hue_order=hue_order, palette=color_palette, ci=68).set()
             else:
-                # sns.barplot(x='dummy', y=key, hue="model", data=data, hue_order=hue_order, palette=color_palette, ci=68).set(
-                #     xlabel = "", xticks = [], ylim = [0, 1000])
+                # If wanting to change size, please change in ylim
                 sns.barplot(x='dummy', y=key, hue="role", data=data, hue_order=hue_order, palette=color_palette, ci=68).set(
                     xlabel = "", xticks = [], ylim = [0, 75])
             legend = plt.legend(frameon=False)
@@ -342,7 +332,6 @@ def plot_data(key, path_save, df, num_agents, legend=False):
             legend_fig.savefig(os.path.join(path_save, '{}_{}_legend_full.png'.format(recipeUsed, mapUsed)), dpi="figure")
             plt.close()
             counter += len(data)
-
 
 
 if __name__ == "__main__":
