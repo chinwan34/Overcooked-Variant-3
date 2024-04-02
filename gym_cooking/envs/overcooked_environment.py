@@ -42,7 +42,6 @@ class OvercookedEnvironment(gym.Env):
         self.widthOfGame = 0
         self.heightOfGame = 0
 
-        
 
         # For visualizing episode.
         self.rep = []
@@ -62,10 +61,11 @@ class OvercookedEnvironment(gym.Env):
         return '\n'.join(_display)
 
     def __eq__(self, other):
-        # return self.repDQN_conv == other.repDQN_conv
+        # Included the repDQN for DQN simulation.
         return self.get_repr() == other.get_repr() or self.repDQN_conv == other.repDQN_conv
     
     def __hash__(self):
+        """Overwriting the hash value of repDQN."""
         return self.repDQN_conv.__hash__()
 
     def __copy__(self):
@@ -137,6 +137,7 @@ class OvercookedEnvironment(gym.Env):
                             f = Floor(location=(x, y))
                             self.world.objects.setdefault('Floor', []).append(f)
                     y += 1
+                
                 # Phase 2: Read in recipe list.
                 elif phase == 2:
                     self.recipes.append(globals()[line]())
@@ -150,6 +151,7 @@ class OvercookedEnvironment(gym.Env):
                         actionsNotSatisfied = list(dict.fromkeys(actionsNotSatisfied))
                         actionsNotSatisfied = set(action.name for action in actionsNotSatisfied)
                     
+                    # Check for the role argument for relative actions.
                     roleList = []
                     if not self.arglist.role or self.arglist.role == "optimal":
                         roleList = self.findSuitableRoles(actionsNotSatisfied, num_agents)
@@ -158,7 +160,6 @@ class OvercookedEnvironment(gym.Env):
                     if (AgentsDone == False):
                         loc = line.split(' ')
                         sim_agent = SimAgent(
-                            # name='agent-'+str(len(self.sim_agents)+1)+roleList[currentIndex].name,
                             name='agent-'+str(len(self.sim_agents)+1),
                             role=roleList[currentIndex],
                             id_color=COLORS[len(self.sim_agents)],
@@ -173,10 +174,22 @@ class OvercookedEnvironment(gym.Env):
         self.world.height = y
         self.world.perimeter = 2*(self.world.width + self.world.height)
 
+        # For repDQN representation.
         self.widthOfGame = x+1
         self.heightOfGame = y
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def findSuitableRoles(self, actionsNotSatisfied, num_agents):
+        """Allocate the optimal linear action sequence roles for the 
+        environment. For project simulation, please only utilize 2 or 3 
+        agents for functional results.
+        Args:
+            actionsNotSatisfied: List of actions that should be completed.
+            num_agents: The number of agents in the simulation
+        Return:
+            The combination of roles to assign.
+        
+        """
         listOfRoles = [Merger(), Chopper(), Deliverer(), Baker(), Cooker(), Cleaner(), Frier()]
         listOfRoles2 = [ChoppingWaiter(), MergingWaiter(), CookingWaiter(), ExceptionalChef(), BakingWaiter(), FryingWaiter()]
         SingleAgentRole = [InvincibleWaiter()]
@@ -205,16 +218,46 @@ class OvercookedEnvironment(gym.Env):
                 return eachCombination
     
     def roleAssignmentAlgorithm(self, typeUsed, num_agents):
+        """ The main role allocation system, allocate manually based
+        on the level of time complexity required. 
+
+        Note, for unbalanced / none / extreme, please only utilize two
+        agents maximum in simulation; while for three, although it is
+        possible for three agents, it is generally not possible for
+        very-easy map due to limited space.
+
+        """
         if typeUsed == "extreme":
             return [InvincibleWaiter(), IdlePerson()]
         elif typeUsed == "none":
             return [InvincibleWaiter(), InvincibleWaiter()]
         elif typeUsed == "unbalanced":
-            return [CookingWaiter(), ExceptionalChefMerger()]
+            if self.arglist.level.endswith("CF"):
+                return [FryingWaiter(), ExceptionalChefMerger()]
+            elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                return [Chopper(), InvincibleWaiter()]
+            elif self.arglist.level.endswith("burger"):
+                return [CookingWaiter(), ExceptionalChefMerger()]
+            return [InvincibleWaiter(), InvincibleWaiter()]
         elif typeUsed == "three":
             if num_agents == 2:
-                return [ExceptionalChefMerger(), CookingMergingWaiter()]
+                if self.arglist.level.endswith("CF"):
+                    return [ExceptionalChefMerger(), FryingMergingWaiter()]
+                elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                    return [ChoppingMerger(), MergingWaiter()]
+                elif self.arglist.level.endswith("burger"):
+                    return [ExceptionalChefMerger(), CookingMergingWaiter()]
+                return [InvincibleWaiter(), InvincibleWaiter()]
             elif num_agents == 3:
+                if self.arglist.level.endswith("CF"):
+                    return [FryingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+                elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                    return [ChoppingWaiter(), Merger(), MergingWaiter()]
+                elif self.arglist.level.endswith("burger"):
+                    return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
+                return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
+
+
                 return [ChoppingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
 
     def reset(self):

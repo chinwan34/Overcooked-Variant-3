@@ -41,7 +41,10 @@ class SubtaskAllocDistribution():
             return random.choice(max_subtask_allocs)
         return None
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_related_probs(self, agent_name, role):
+        """Return a list of actions that are allowed by agent and its
+        relevant roles."""
         usableProbabilitiesAndActions = []
         for subtask_alloc, p in self.probs.items():
             for f in subtask_alloc:
