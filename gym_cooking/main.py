@@ -99,18 +99,57 @@ def findSuitableRoles(actionsNotSatisfied, num_agents):
         if actionsNotSatisfied.issubset(currentSet):
             return eachCombination
     
-def roleAssignmentAlgorithm(typeUsed, num_agents):
+def roleAssignmentAlgorithm(typeUsed, num_agents, level):
+    """ The main role allocation system, allocate manually based
+    on the level of time complexity required. 
+
+    Note, for unbalanced / none / extreme, please only utilize two
+    agents maximum in simulation; while for three, although it is
+    possible for three agents, it is generally not possible for
+    very-easy map due to limited space (Not implemented).
+
+    Args:
+        typeUsed: The role allocation mechanism
+        num_agents: Number of agents in the environment
+        level: The current level name
+    
+    Return:
+        A list of role assignment for simulation
+
+    """
     if typeUsed == "extreme":
-        return [IdlePerson(), InvincibleWaiter()]
+        return [InvincibleWaiter(), IdlePerson()]
+    
     elif typeUsed == "none":
         return [InvincibleWaiter(), InvincibleWaiter()]
+    
     elif typeUsed == "unbalanced":
-        return [CookingWaiter(), ExceptionalChefMerger()]
+        if level.endswith("CF"):
+            return [FryingWaiter(), ExceptionalChefMerger()]
+        elif level.endswith("tomato") or level.endswith("salad"):
+            return [Chopper(), InvincibleWaiter()]
+        elif level.endswith("burger"):
+            return [CookingWaiter(), ExceptionalChefMerger()]
+        return [InvincibleWaiter(), InvincibleWaiter()]
+    
     elif typeUsed == "three":
         if num_agents == 2:
-            return [ExceptionalChefMerger(), CookingMergingWaiter()]
+            if level.endswith("CF"):
+                return [ExceptionalChefMerger(), FryingMergingWaiter()]
+            elif level.endswith("tomato") or level.endswith("salad"):
+                return [ChoppingMerger(), MergingWaiter()]
+            elif level.endswith("burger"):
+                return [ExceptionalChefMerger(), CookingMergingWaiter()]
+            return [InvincibleWaiter(), InvincibleWaiter()]
+        
         elif num_agents == 3:
-            return [ChoppingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+            if level.endswith("CF"):
+                return [FryingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+            elif level.endswith("tomato") or level.endswith("salad"):
+                return [ChoppingWaiter(), Merger(), MergingWaiter()]
+            elif level.endswith("burger"):
+                return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
+            return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
 
 
 def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
@@ -145,7 +184,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                 if not arglist.role or arglist.role == "optimal":
                     roleList = findSuitableRoles(actionLeft, arglist.num_agents)
                 else:
-                    roleList = roleAssignmentAlgorithm(arglist.role, arglist.num_agents)
+                    roleList = roleAssignmentAlgorithm(arglist.role, arglist.num_agents, arglist.level)
                 if (finished == False and not arglist.dqn):
                     loc = line.split(' ')
                     real_agent = RealAgent(
