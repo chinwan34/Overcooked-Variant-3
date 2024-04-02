@@ -85,7 +85,7 @@ class Game:
             pygame.display.flip()
             pygame.display.update()
 
-
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def draw_gridsquare(self, gs):
         sl = self.scaled_location(gs.location)
         fill = pygame.Rect(sl[0], sl[1], self.scale, self.scale)
@@ -103,6 +103,7 @@ class Game:
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
             self.draw('cutboard', self.tile_size, sl)
         
+        # Additional objects/equipments implemented in this project
         elif isinstance(gs, CookingPan):
             pygame.draw.rect(self.screen, Color.COUNTER, fill)
             pygame.draw.rect(self.screen, Color.COUNTER_BORDER, fill, 1)
@@ -135,8 +136,14 @@ class Game:
         image = pygame.transform.scale(get_image(image_path), size)
         self.screen.blit(image, location)
 
-
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def draw_agent(self, agent):
+        """
+        Draw agents based on their roles to assign colors.
+        
+        Args:
+            agent: The current simulation agent
+        """
         if ("Chopper" == agent.role.name) or ("BakingWaiter" == agent.role.name) or ("FryingWaiter" == agent.role.name):
             self.draw('agent-{}-{}'.format("blue", agent.role.name),
                 self.tile_size, self.scaled_location(agent.location))
@@ -151,12 +158,13 @@ class Game:
                 self.tile_size, self.scaled_location(agent.location))
         self.draw_agent_object(agent.holding)
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def draw_agent_object(self, obj):
         # Holding shows up in bottom right corner.
         if obj is None: return
         for i in obj.contents:
             if (isinstance(i, Plate)) and (i.state_index == 0):
-                # i.update_dirty_name()
+                # Account for dirty plate action.
                 self.draw('DirtyPlate', self.tile_size, self.scaled_location(obj.location))
                 return
         if any([isinstance(c, Plate) for c in obj.contents]): 
@@ -167,8 +175,12 @@ class Game:
                 obj.merge(plate)
         else:
             self.draw(obj.full_name, self.holding_size, self.holding_location(obj.location))
-
+    
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_plate_location(self):
+        """
+        Get a list of plate locations in the global variable.
+        """
         objs = []
         for o_list in self.world.objects.values():
             for o in o_list:
@@ -182,8 +194,13 @@ class Game:
             if any([isinstance(c, Plate) for c in o.contents]):
                 Game.plate_location.append(o.location)
 
-    
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_all_food_plate_location(self):
+        """
+        Get positions of all food and plates. Utilized
+        in the trashcan procedure in the interact.py for 
+        dumping and return object locations.
+        """
         objs = []
         alphabetClassPair = [(Fish, 'f'), (FriedChicken, 'k'), (BurgerMeat, 'm'),
                          (PizzaDough, 'P'), (Cheese, 'c'), (Bread, 'b'), (Onion, 'o'),
@@ -201,12 +218,13 @@ class Game:
                     if type(o.contents[i]) == alphabetClassPair[j][0]:
                         Game.food_locations.append((alphabetClassPair[j][1], o.location))
         
-
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def draw_object(self, obj):
         if obj is None: return
 
         for i in obj.contents:
             if (isinstance(i, Plate)) and (i.state_index == 0):
+                # Account for dirty plate.
                 self.draw('DirtyPlate', self.tile_size, self.scaled_location(obj.location))
                 return 
         
