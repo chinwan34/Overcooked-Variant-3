@@ -12,10 +12,10 @@ class DLModel:
         self.state_sizes = state_sizes
         self.action_sizes = action_sizes
         self.name = name
-        self.model = self.build_and_compile_model()
-        self.targetModel = self.build_and_compile_model()
         self.alpha = arglist.learning_rate
         self.num_nodes = arglist.num_nodes
+        self.model = self.build_and_compile_model()
+        self.targetModel = self.build_and_compile_model()
         self.actions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     
     def load_model_trained(self):

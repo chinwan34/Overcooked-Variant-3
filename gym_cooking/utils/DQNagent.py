@@ -36,7 +36,7 @@ class DQNAgent:
         self.minEpsilon = 0.02
         self.maxExplorationSteps = 20000000
     
-    def legal_actons(self, legalActions):
+    def legal_actions(self, legalActions):
         """
         Add actions that are legal in the environment, 
         utilizing for the epsilon-greedy algorithm.
@@ -48,7 +48,6 @@ class DQNAgent:
         actions_available = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         for action in legalActions:
             self.plausibleActions.append(actions_available.index(action))
-        print(self.plausibleActions)
 
     def epsilon_greedy(self, state):
         """
