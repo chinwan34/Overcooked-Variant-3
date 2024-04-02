@@ -9,9 +9,10 @@ import copy
 
 
 class STRIPSWorld:
+
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def __init__(self, world, recipes):
         self.initial = recipe.STRIPSState()
-        # print("STRIPSWrold", recipes)
         self.recipes = recipes
         self.numberOfPlates = 0
 
@@ -19,6 +20,7 @@ class STRIPSWorld:
         self.initial.add_predicate(recipe.NoPredicate())
         for obj in world.get_object_list():
             if isinstance(obj, Object):
+                # Additional objects added
                 for obj_name in ['Plate', 'Tomato', 'Lettuce', 'Onion', 'Bread', 'Cheese']:
                     if obj.contains(obj_name):
                         if obj_name == 'Plate':
@@ -34,14 +36,27 @@ class STRIPSWorld:
                     if obj.contains(obj_name):
                         self.initial.add_predicate(recipe.Unbaked(obj_name))
 
-
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def generate_graph(self, recipel, max_path_length, action_path_length):
+        """
+        Create a graph search based on current subtasks and transitions,
+        altered for plate recreation and state reset after delivery.
+
+        Args:
+            recipel: The recipe specified, name changed to avoid repetition
+            max_path_length: Maximum length of the graph
+            action_path_length: Current amount of action paths in the list
+        Return:
+            The graph generated, and the goal_state searched
+        """
         all_actions = recipel.actions   # set
         goal_state = None
 
         new_preds = set()
         graph = nx.DiGraph()
+
         if action_path_length != 0:
+            # Account for dirty plate possibility
             if recipe.Fresh("Plate") in self.initial.predicates:
                 self.initial.delete_predicate(recipe.Fresh("Plate"))
                 self.initial.add_predicate(recipe.Uncleaned("Plate"))
@@ -56,7 +71,6 @@ class STRIPSWorld:
                     if a.is_valid_in(state):
                         next_state = a.get_next_from(state, self.numberOfPlates)
                         for p in next_state.predicates:
-                            # print(next_state)
                             new_preds.add(str(p))
                         graph.add_node(next_state, obj=next_state)
                         graph.add_edge(state, next_state, obj=a)
@@ -76,7 +90,7 @@ class STRIPSWorld:
         
         return graph, goal_state
 
-
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_subtasks(self, max_path_length=10, draw_graph=False):
         action_paths = []
 
