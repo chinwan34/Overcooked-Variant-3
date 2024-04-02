@@ -70,7 +70,17 @@ def fix_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def findSuitableRoles(actionsNotSatisfied, num_agents):
+    """Allocate the optimal linear action sequence roles for the 
+        environment. For project simulation, please only utilize 2 or 3 
+        agents for functional results.
+        Args:
+            actionsNotSatisfied: List of actions that should be completed.
+            num_agents: The number of agents in the simulation
+        Return:
+            The combination of roles to assign. 
+    """
     listOfRoles = [Merger(), Chopper(), Deliverer(), Baker(), Cooker(), Cleaner(), Frier()]
     listOfRoles2 = [ChoppingWaiter(), MergingWaiter(), CookingWaiter(), ExceptionalChef(), BakingWaiter(), FryingWaiter()]
     SingleAgentRole = [InvincibleWaiter()]
@@ -98,7 +108,8 @@ def findSuitableRoles(actionsNotSatisfied, num_agents):
 
         if actionsNotSatisfied.issubset(currentSet):
             return eachCombination
-    
+
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def roleAssignmentAlgorithm(typeUsed, num_agents, level):
     """ The main role allocation system, allocate manually based
     on the level of time complexity required. 
@@ -199,6 +210,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                     if len(real_agents) >= arglist.num_agents:
                         finished = True
                     index+=1
+                # DQN Agents specification
                 elif (finished == False and arglist.dqn):
                     loc = line.split(' ')
                     dqn_agent = DQNAgent(
@@ -252,9 +264,15 @@ def main_loop(arglist):
     bag.set_termination(termination_info=env.termination_info,
             successful=env.successful)
 
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def dqn_main(arglist):
     """
-    The main DQN Loop.
+    The main DQN simulation loop. Require
+    argument specification for this to run.
+
+    Args:
+        arglist: The argument list in the command line
+
     """
     print("Initializing environment and agents.")
     env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
@@ -263,16 +281,19 @@ def dqn_main(arglist):
     dqnClass = mainAlgorithm(env, arglist)
     dqn_agents = []
 
+    # Set file name at utils/dqn_result
     dlmodel_file = dqnClass.set_filename(dqnClass.filename_create_dlmodel())
-
     state_size, action_size = env.world_size_action_size()
-
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
+    # Main running algorithm
     dqnClass.run(dqn_agents)
+
     dones = []
     rewards = []
     time_steps = []
+
+    # The testing run, if not wanting it, please set game_play = 0
     for i in range(arglist.game_play):
         (done, reward, step) = dqnClass.predict_game(dqn_agents)
         dones.append(done)

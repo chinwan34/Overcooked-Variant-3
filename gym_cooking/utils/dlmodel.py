@@ -59,7 +59,5 @@ class DLModel:
                     maxIndex = i
         return maxIndex
 
-        # return np.argmax((actions.flatten()))
-
     def save_model(self):
         self.model.save(self.name)
