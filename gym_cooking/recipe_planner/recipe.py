@@ -13,7 +13,15 @@ class Recipe:
     def __str__(self):
         return self.name
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def add_ingredient(self, item):
+        """
+        Add the actions that are part of the item for subtask
+        search. Additional subtasks and actions added below.
+
+        Args:
+            item: The ingredient specified
+        """
         self.contents.append(item)
 
         # always starts with FRESH
@@ -24,6 +32,7 @@ class Recipe:
             self.actions.add(recipe.Merge(item.name, 'Plate',\
                 [item.state_seq[-1](item.name), recipe.Fresh('Plate')], None))
         
+        # Additional FoodSequence created
         if item.state_seq == FoodSequence.UNFRIED_COOKED:
             self.actions.add(recipe.Fry(item.name))
             self.actions.add(recipe.Merge(item.name, 'Plate',\
@@ -39,7 +48,12 @@ class Recipe:
             self.actions.add(recipe.Merge(item.name, 'Plate',\
                 [item.state_seq[-1](item.name), recipe.Fresh('Plate')], None))  
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def add_uncleaned_plates_issue(self):
+        """
+        Included the uncleaned plates possibility in actions,
+        only available in manual play mode.
+        """
         self.actions.add(recipe.Clean(Plate().full_name)) 
 
     def add_goal(self):
@@ -50,7 +64,13 @@ class Recipe:
         self.goal = recipe.Delivered(self.full_plate_name)
         self.actions.add(recipe.Deliver(self.full_plate_name))
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def add_merge_actions(self):
+        """
+        Add the possible merging action between
+        multiple ingredients. Considered multiple ingredient-burger
+        for complex merging actions possibilities.
+        """
         # should be general enough for any kind of salad / raw plated veggies
         isBurger = False
         types = [('Tomato', recipe.Chopped), ('Lettuce', recipe.Chopped), ('BurgerMeat', recipe.Cooked), ('Bread', recipe.Fresh)]
@@ -79,6 +99,7 @@ class Recipe:
 
                     # can merge item with remaining
                     if isBurger:
+                        # Deal with burger merging issues
                         if len(rem) == 1:
                             for i,j in type_permutations:
                                 if item == i[0] and rem[0] == j[0]:
@@ -104,6 +125,7 @@ class Recipe:
                                 [recipe.Merged(plate_str), recipe.Merged(rem_str)], None))
                             self.actions.add(recipe.Merge(item, rem_plate_str))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class FriedChickenRe(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'FriedChickenRe')
@@ -112,6 +134,7 @@ class FriedChickenRe(Recipe):
         self.add_merge_actions()
         self.add_uncleaned_plates_issue()
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class SimplePizza(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'SimplePizza')
@@ -122,6 +145,10 @@ class SimplePizza(Recipe):
         self.add_uncleaned_plates_issue()
     
     def add_merge_actions(self):
+         """
+         Overwriting to superclass, with its own 
+         combination of merging action due to unique ingredients.
+         """
          for i in range(2, len(self.contents)+1):
             # for any combo of i ingredients to be merged
             for combo in combinations(self.contents_names, i):
@@ -138,6 +165,7 @@ class SimplePizza(Recipe):
                     rem_plate_str = '-'.join(sorted(rem + ['Plate']))
 
                     # can merge item with remaining
+                    # consider simply for cheese and pizzadough object
                     if len(rem) == 1:
                         if item == "PizzaDough" and rem[0] == "Cheese":
                             self.actions.add(recipe.Merge(item, rem_str,\
@@ -153,7 +181,7 @@ class SimplePizza(Recipe):
                             [recipe.Merged(plate_str), recipe.Merged(rem_str)], None))
                         self.actions.add(recipe.Merge(item, rem_plate_str))
 
-
+# PROJECT INVOLVED THIS CLASS CREATION.
 class FriedFishRe(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'FriedFishRe')
@@ -161,6 +189,7 @@ class FriedFishRe(Recipe):
         self.add_goal()
         self.add_merge_actions()
     
+# PROJECT INVOLVED THIS CLASS CREATION.
 class FishAndChicken(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'FishAndChicken')
@@ -171,6 +200,10 @@ class FishAndChicken(Recipe):
         self.add_uncleaned_plates_issue()
     
     def add_merge_actions(self):
+         """
+         Overwriting to superclass for the fish and chicken, with its own 
+         combination of merging action due to unique ingredients.
+         """
          for i in range(2, len(self.contents)+1):
             # for any combo of i ingredients to be merged
             for combo in combinations(self.contents_names, i):
@@ -198,6 +231,7 @@ class FishAndChicken(Recipe):
                             [recipe.Merged(plate_str), recipe.Merged(rem_str)], None))
                         self.actions.add(recipe.Merge(item, rem_plate_str))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class SimpleBurger(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'SimpleBurger')
@@ -207,6 +241,7 @@ class SimpleBurger(Recipe):
         self.add_merge_actions()
         self.add_uncleaned_plates_issue()
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class LettuceBurger(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'LettuceBurger')
@@ -217,6 +252,7 @@ class LettuceBurger(Recipe):
         self.add_merge_actions()
         self.add_uncleaned_plates_issue()
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class TomatoBurger(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'TomatoBurger')
@@ -227,6 +263,7 @@ class TomatoBurger(Recipe):
         self.add_merge_actions()
         self.add_uncleaned_plates_issue()
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class SaladBurger(Recipe):
     def __init__(self):
         Recipe.__init__(self, 'SaladBurger')

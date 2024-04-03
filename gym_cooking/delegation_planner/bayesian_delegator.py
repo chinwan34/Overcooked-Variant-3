@@ -76,6 +76,7 @@ class BayesianDelegator(Delegator):
         elif self.model_type == "dc":
             probs = self.add_dc_subtasks()
         else:
+            # Changable here for the original add_subtasks() function.
             probs = self.add_subtasks_alter()
         return probs
 
@@ -87,8 +88,6 @@ class BayesianDelegator(Delegator):
             return True
         agent_locs = [agent.location for agent in list(filter(lambda a: a.name in subtask_agent_names, env.sim_agents))]
         start_obj, goal_obj = get_subtask_obj(subtask=subtask)
-        # if not isinstance(start_obj, list) and len(start_obj.contents) == 1 and isinstance(start_obj.contents[0], Plate):
-        #     pass
         
         subtask_action_obj = get_subtask_action_obj(subtask=subtask)
         A_locs, B_locs = env.get_AB_locs_given_objs(
@@ -141,8 +140,6 @@ class BayesianDelegator(Delegator):
             # Remove all Nones (at least 1 agent must be doing something).
             if all([t.subtask is None for t in subtask_alloc]) and len(subtask_alloc) > 1:
                 subtask_alloc_probs.delete(subtask_alloc)
-        
-        print("After pruning!!!!!!!!!!!!!!!!!!!!!!!!!!", subtask_alloc_probs)
 
         return subtask_alloc_probs
 
@@ -155,16 +152,12 @@ class BayesianDelegator(Delegator):
         probs = self.prune_subtask_allocs(
                 observation=obs, subtask_alloc_probs=probs)
         probs.normalize()
-        # print(probs)
-
 
         if priors_type == 'spatial':
-            print("GO IN SPATIAL PRIORS")
             self.probs = self.get_spatial_priors(obs, probs)
         elif priors_type == 'uniform':
             # Do nothing because probs already initialized to be uniform.
             self.probs = probs
-        print("SET PRIORS FINAL STEPS")
         self.ensure_at_least_one_subtask()
         self.probs.normalize()
 
@@ -181,7 +174,6 @@ class BayesianDelegator(Delegator):
             for t in subtask_alloc:
                 if t.subtask is not None:
                     # Calculate prior with this agent's planner.
-                    print("GO IN GET_LOWER_BOUND_FOR_SUBTASK_ALLOC")
                     total_weight += 1.0 / float(self.get_lower_bound_for_subtask_alloc(
                         obs=copy.copy(obs),
                         subtask=t.subtask,
@@ -191,7 +183,6 @@ class BayesianDelegator(Delegator):
                 some_probs.update(
                     subtask_alloc=subtask_alloc,
                     factor=len(t)**2. * total_weight)
-        print("COMPLETEd GET SPATIAL PRIORs")
         return some_probs
 
     def get_other_agent_planners(self, obs, backup_subtask):
@@ -356,12 +347,14 @@ class BayesianDelegator(Delegator):
                     other_subtask_allocs.append(new_subtask_alloc)
             return other_subtask_allocs
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_other_subtask_allocations_alter(self, remaining_agents_roles, remaining_subtasks, base_subtask_alloc):
         """Return a list of subtask allocations to be added onto `subtask_allocs`.
 
         Each combination should be built off of the `base_subtask_alloc`.
         Add subtasks for all other agents and all other recipe subtasks NOT in
-        the ignore set.
+        the ignore set. This is an alteration to eliminate issues with overlapping
+        subtasks when role not allowing agents.
 
         e.g. base_subtask_combo=[
             SubtaskAllocation(subtask=(Chop(T)),
@@ -378,8 +371,6 @@ class BayesianDelegator(Delegator):
         # This case is hit if we have more agents than subtasks.
         if not remaining_subtasks:
             for agent in remaining_agents_roles:
-                # inputForPart2 = tuple(agent[0])
-                # print(inputForPart2)
                 new_subtask_alloc = base_subtask_alloc + [SubtaskAllocation(subtask=None, subtask_agent_names=(agent[0]))]
                 other_subtask_allocs.append(new_subtask_alloc)
             return other_subtask_allocs
@@ -392,6 +383,7 @@ class BayesianDelegator(Delegator):
                     new_subtask_alloc = base_subtask_alloc + [SubtaskAllocation(subtask=t, subtask_agent_names=(remaining_agents_roles[0][0],))]
                     other_subtask_allocs.append(new_subtask_alloc)
             return other_subtask_allocs
+        
         # If >1 agent remaining, create cooperative and divide & conquer
         # subtask allocations.
         else:
@@ -402,6 +394,8 @@ class BayesianDelegator(Delegator):
                     new_subtask_alloc = base_subtask_alloc + [SubtaskAllocation(subtask=t, subtask_agent_names=tuple(agentNamesToPut))]
                     other_subtask_allocs.append(new_subtask_alloc)
             # Divide and Conquer subtasks (different subtask assigned to remaining agents).
+            
+            # Please refer to Chapter 4 for the logic in subtask allocation
             if len(remaining_subtasks) > 1:
                 for ts in permutations(remaining_subtasks, 2):
                     current_subtask_alloc = []
@@ -449,7 +443,8 @@ class BayesianDelegator(Delegator):
                             current_subtask_alloc.append(task2)
                             listToUse.clear()
                         else:
-                            firstCan1 = False    
+                            firstCan1 = False   
+ 
                         if secondCan0 == True and firstCan1 == True:
                             if task1 is not None:
                                 listToUse.append(remaining_agents_roles[1][0])
@@ -502,12 +497,14 @@ class BayesianDelegator(Delegator):
                                 base_subtask_alloc=subtask_alloc)
         return SubtaskAllocDistribution(subtask_allocs)
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def add_subtasks_alter(self):
         """Return the entire distribution of subtask allocations."""
         subtask_allocs = []
 
         subtasks = self.incomplete_subtasks
         # Just one agent: Assign itself to all subtasks.
+        # Not considered in the project: Please only run with either 2 or 3 agents.
         if len(self.all_agent_names) == 1:
             for t in subtasks:
                 if type(t) in self.all_agent_role_names[0][1].probableActions:
@@ -518,6 +515,7 @@ class BayesianDelegator(Delegator):
                 # Temporarily add Nones, to allow agents to be allocated no subtask.
                 # Later, we filter out allocations where all agents are assigned to None.
                 subtasks_temp = subtasks + [None for _ in range(len(self.all_agent_names) - 1)]
+                
                 # Cooperative subtasks (same subtask assigned to agents).
                 for t in subtasks_temp:
                     if all(type(t) in roleUsed[1].probableActions for roleUsed in first_agents) or t == None:
@@ -622,6 +620,8 @@ class BayesianDelegator(Delegator):
                                 remaining_agents_roles=remaining_agents,
                                 remaining_subtasks=remaining_subtasks,
                                 base_subtask_alloc=subtask_alloc)
+        
+        # Filter out repetitive tasks.
         finalReturn = []
         for subtaskAlloc in subtask_allocs:
             if subtaskAlloc not in finalReturn:
@@ -629,8 +629,6 @@ class BayesianDelegator(Delegator):
                     pass
                 else:
                     finalReturn.append(subtaskAlloc)
-        # print("subtask_allocs", SubtaskAllocDistribution(subtask_allocs))
-        # print("final return", SubtaskAllocDistribution(finalReturn))
         return SubtaskAllocDistribution(finalReturn)
 
     def add_greedy_subtasks(self):
@@ -664,9 +662,13 @@ class BayesianDelegator(Delegator):
 
         return SubtaskAllocDistribution(subtask_allocs)
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def add_dc_subtasks_alter(self):
         """Return the entire distribution of divide & conquer subtask allocations.
-        i.e. no subtask is shared between two agents.
+        i.e. no subtask is shared between two agents. A alteration to exclude any
+        subtask allocation that is not allowed.
+
+        Not ran or utilized in the project.
 
         If there are no subtasks, just make an empty distribution and return."""
         subtask_allocs = []
@@ -680,8 +682,9 @@ class BayesianDelegator(Delegator):
 
         return SubtaskAllocDistribution(subtask_allocs)
 
-
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def check_role_responsibilities(self, role, subTask):
+        """Check that the subtask is inside role's allowed actions."""
         if type(subTask) not in role.probableActions:
             return False
         return True
@@ -696,9 +699,11 @@ class BayesianDelegator(Delegator):
                         return t.subtask, t.subtask_agent_names
         return None, agent_name
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def select_subtask_alter(self, agent_name, role):
         """Return subtask and subtask_agent_names for agent with agent_name
-        with max. probability."""
+        with max. probability. A second filter to avoid subtask allocation, not
+        utilized after add_subtasks_alter() implementation."""
         max_subtask_allocs = []
         usableProbabilitiesAndActions = self.probs.get_related_probs(agent_name, role)
 

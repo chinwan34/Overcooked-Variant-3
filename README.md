@@ -34,7 +34,7 @@ Please try with pip3 / python3 if the following does not work on the machine.
 ```
 conda create -n OvercookedV3 python==3.7.16
 conda activate OvercookedV3
-python -m pip install -e.
+python -m pip install -e .
 cd gym_cooking
 ```
 
@@ -132,7 +132,7 @@ The results will be stored in `gym_cooking/misc/metrics/graph_agents2`.
 The command line structure is similar to the BD algorithm, but with very different arguments:
 
 ```
-python main.py --num_agents <number> --level <level name> --role <role name> --number-training <number> --game-play <number> --dqn
+python main.py --num-agents <number> --level <level name> --role <role name> --number-training <number> --game-play <number> --dqn
 ```
 
 The `--number-training` specifies the number of episodes for the agents, and the `--game-play` represents the number of simulation after training. Some other commands that are optional include:

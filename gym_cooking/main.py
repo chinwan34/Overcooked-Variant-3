@@ -70,7 +70,17 @@ def fix_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def findSuitableRoles(actionsNotSatisfied, num_agents):
+    """Allocate the optimal linear action sequence roles for the 
+        environment. For project simulation, please only utilize 2 or 3 
+        agents for functional results.
+        Args:
+            actionsNotSatisfied: List of actions that should be completed.
+            num_agents: The number of agents in the simulation
+        Return:
+            The combination of roles to assign. 
+    """
     listOfRoles = [Merger(), Chopper(), Deliverer(), Baker(), Cooker(), Cleaner(), Frier()]
     listOfRoles2 = [ChoppingWaiter(), MergingWaiter(), CookingWaiter(), ExceptionalChef(), BakingWaiter(), FryingWaiter()]
     SingleAgentRole = [InvincibleWaiter()]
@@ -98,19 +108,59 @@ def findSuitableRoles(actionsNotSatisfied, num_agents):
 
         if actionsNotSatisfied.issubset(currentSet):
             return eachCombination
+
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
+def roleAssignmentAlgorithm(typeUsed, num_agents, level):
+    """ The main role allocation system, allocate manually based
+    on the level of time complexity required. 
+
+    Note, for unbalanced / none / extreme, please only utilize two
+    agents maximum in simulation; while for three, although it is
+    possible for three agents, it is generally not possible for
+    very-easy map due to limited space (Not implemented).
+
+    Args:
+        typeUsed: The role allocation mechanism
+        num_agents: Number of agents in the environment
+        level: The current level name
     
-def roleAssignmentAlgorithm(typeUsed, num_agents):
+    Return:
+        A list of role assignment for simulation
+
+    """
     if typeUsed == "extreme":
-        return [IdlePerson(), InvincibleWaiter()]
+        return [InvincibleWaiter(), IdlePerson()]
+    
     elif typeUsed == "none":
         return [InvincibleWaiter(), InvincibleWaiter()]
+    
     elif typeUsed == "unbalanced":
-        return [CookingWaiter(), ExceptionalChefMerger()]
+        if level.endswith("CF"):
+            return [FryingWaiter(), ExceptionalChefMerger()]
+        elif level.endswith("tomato") or level.endswith("salad"):
+            return [Chopper(), InvincibleWaiter()]
+        elif level.endswith("burger"):
+            return [CookingWaiter(), ExceptionalChefMerger()]
+        return [InvincibleWaiter(), InvincibleWaiter()]
+    
     elif typeUsed == "three":
         if num_agents == 2:
-            return [ExceptionalChefMerger(), CookingMergingWaiter()]
+            if level.endswith("CF"):
+                return [ExceptionalChefMerger(), FryingMergingWaiter()]
+            elif level.endswith("tomato") or level.endswith("salad"):
+                return [ChoppingMerger(), MergingWaiter()]
+            elif level.endswith("burger"):
+                return [ExceptionalChefMerger(), CookingMergingWaiter()]
+            return [InvincibleWaiter(), InvincibleWaiter()]
+        
         elif num_agents == 3:
-            return [ChoppingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+            if level.endswith("CF"):
+                return [FryingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+            elif level.endswith("tomato") or level.endswith("salad"):
+                return [ChoppingWaiter(), Merger(), MergingWaiter()]
+            elif level.endswith("burger"):
+                return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
+            return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
 
 
 def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
@@ -145,7 +195,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                 if not arglist.role or arglist.role == "optimal":
                     roleList = findSuitableRoles(actionLeft, arglist.num_agents)
                 else:
-                    roleList = roleAssignmentAlgorithm(arglist.role, arglist.num_agents)
+                    roleList = roleAssignmentAlgorithm(arglist.role, arglist.num_agents, arglist.level)
                 if (finished == False and not arglist.dqn):
                     loc = line.split(' ')
                     real_agent = RealAgent(
@@ -160,6 +210,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                     if len(real_agents) >= arglist.num_agents:
                         finished = True
                     index+=1
+                # DQN Agents specification
                 elif (finished == False and arglist.dqn):
                     loc = line.split(' ')
                     dqn_agent = DQNAgent(
@@ -213,9 +264,15 @@ def main_loop(arglist):
     bag.set_termination(termination_info=env.termination_info,
             successful=env.successful)
 
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def dqn_main(arglist):
     """
-    The main DQN Loop.
+    The main DQN simulation loop. Require
+    argument specification for this to run.
+
+    Args:
+        arglist: The argument list in the command line
+
     """
     print("Initializing environment and agents.")
     env = gym.envs.make("gym_cooking:overcookedEnv-v0", arglist=arglist)
@@ -224,16 +281,19 @@ def dqn_main(arglist):
     dqnClass = mainAlgorithm(env, arglist)
     dqn_agents = []
 
+    # Set file name at utils/dqn_result
     dlmodel_file = dqnClass.set_filename(dqnClass.filename_create_dlmodel())
-
     state_size, action_size = env.world_size_action_size()
-
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
+    # Main running algorithm
     dqnClass.run(dqn_agents)
+
     dones = []
     rewards = []
     time_steps = []
+
+    # The testing run, if not wanting it, please set game_play = 0
     for i in range(arglist.game_play):
         (done, reward, step) = dqnClass.predict_game(dqn_agents)
         dones.append(done)

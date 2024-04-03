@@ -43,34 +43,42 @@ class Uncleaned(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Uncleaned', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Cleaned(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Cleaned', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Unfried(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Unfried', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Unbaked(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Unbaked', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Uncooked(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Uncooked', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Chopped(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Chopped', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Cooked(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Cooked', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Delivered(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Delivered', (obj,))
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Merged(Predicate):
     def __init__(self, obj):
         Predicate.__init__(self, 'Merged', (obj,))
@@ -119,7 +127,8 @@ class Action:
             except:
                 return False
         return True
-
+    
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def get_next_from(self, state, num_of_plates):
         next_state = copy.copy(state)
         for predicate in self.pre:
@@ -129,7 +138,16 @@ class Action:
         self.delete_duplicate_plate(next_state, num_of_plates)
         return next_state
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def delete_duplicate_plate(self, stateUsed, num_of_plates):
+        """
+        Delete the duplicate plate status in the graph to avoid 
+        not locating the Clean(Plate) action.
+
+        Args:
+            stateUsed: The current state of graph search
+            num_of_plates: The number of plates present in the graph
+        """
         if Fresh("Plate") in stateUsed.predicates:
             counted = stateUsed.predicates.count(Fresh("Plate"))
         else:
@@ -151,6 +169,7 @@ Clean(X)
 Pre: Uncleaned(X)
 Post: Cleaned(X)
 '''
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Clean(Action):
     def __init__(self, obj, pre=None, post_add=None):
         self.args= (obj,)
@@ -165,6 +184,7 @@ Fry(X)
 Pre: Unfried(X)
 Post: Cooked(X)
 '''
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Fry(Action):
     def __init__(self, obj, pre=None, post_add=None):
         self.args= (obj,)
@@ -179,6 +199,7 @@ bake(X)
 Pre: Unbaked(X-Y), Merged(X-Y)
 Post: Cooked(X)
 '''
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Bake(Action):
     def __init__(self, obj, pre=None, post_add=None):
         self.args= (obj,)
@@ -192,6 +213,7 @@ cook(X)
 Pre: Uncooked(X)
 Post: Cooked(X)
 '''
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Cook(Action):
     def __init__(self, obj, pre=None, post_add=None):
 
@@ -244,12 +266,14 @@ Pre: SomeState(X), SomeState(Y)
 Post: Merged(X-Y), !SomeState(X), !SomeState(Y)
 '''
 class Merge(Action):
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def __init__(self, arg1, arg2, pre=None, post_add=None):
         from utils.core import BurgerMeat, FriedChicken, Fish, Plate, PizzaDough
         self.args = (arg1, arg2)
         #self.args = tuple(sorted([arg1, arg2]))
         # sorted because it doesn't matter order of merging
 
+        # Alter default based on object
         if (isinstance(arg1, BurgerMeat)) or (isinstance(arg1, FriedChicken)) or (isinstance(arg1, Fish)):
             self.pre_default = [Cooked(arg1), Merged(arg2)]
         elif (isinstance(arg1, PizzaDough)):

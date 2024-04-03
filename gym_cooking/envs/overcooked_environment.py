@@ -42,7 +42,6 @@ class OvercookedEnvironment(gym.Env):
         self.widthOfGame = 0
         self.heightOfGame = 0
 
-        
 
         # For visualizing episode.
         self.rep = []
@@ -62,10 +61,11 @@ class OvercookedEnvironment(gym.Env):
         return '\n'.join(_display)
 
     def __eq__(self, other):
-        return self.repDQN_conv == other.repDQN_conv
-        # return self.get_repr() == other.get_repr() or self.repDQN_conv == other.repDQN_conv
+        # Included the repDQN for DQN simulation.
+        return self.get_repr() == other.get_repr() or self.repDQN_conv == other.repDQN_conv
     
     def __hash__(self):
+        """Overwriting the hash value of repDQN."""
         return self.repDQN_conv.__hash__()
 
     def __copy__(self):
@@ -101,6 +101,7 @@ class OvercookedEnvironment(gym.Env):
         if self.arglist.role is not None:
             self.filename += "role-{}".format(self.arglist.role)
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def load_level(self, level, num_agents):
         x = 0
         y = 0
@@ -137,6 +138,7 @@ class OvercookedEnvironment(gym.Env):
                             f = Floor(location=(x, y))
                             self.world.objects.setdefault('Floor', []).append(f)
                     y += 1
+                
                 # Phase 2: Read in recipe list.
                 elif phase == 2:
                     self.recipes.append(globals()[line]())
@@ -150,6 +152,7 @@ class OvercookedEnvironment(gym.Env):
                         actionsNotSatisfied = list(dict.fromkeys(actionsNotSatisfied))
                         actionsNotSatisfied = set(action.name for action in actionsNotSatisfied)
                     
+                    # Check for the role argument for relative actions.
                     roleList = []
                     if not self.arglist.role or self.arglist.role == "optimal":
                         roleList = self.findSuitableRoles(actionsNotSatisfied, num_agents)
@@ -158,7 +161,6 @@ class OvercookedEnvironment(gym.Env):
                     if (AgentsDone == False):
                         loc = line.split(' ')
                         sim_agent = SimAgent(
-                            # name='agent-'+str(len(self.sim_agents)+1)+roleList[currentIndex].name,
                             name='agent-'+str(len(self.sim_agents)+1),
                             role=roleList[currentIndex],
                             id_color=COLORS[len(self.sim_agents)],
@@ -173,10 +175,22 @@ class OvercookedEnvironment(gym.Env):
         self.world.height = y
         self.world.perimeter = 2*(self.world.width + self.world.height)
 
+        # For repDQN representation.
         self.widthOfGame = x+1
         self.heightOfGame = y
 
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def findSuitableRoles(self, actionsNotSatisfied, num_agents):
+        """Allocate the optimal linear action sequence roles for the 
+        environment. For project simulation, please only utilize 2 or 3 
+        agents for functional results.
+        Args:
+            actionsNotSatisfied: List of actions that should be completed.
+            num_agents: The number of agents in the simulation
+        Return:
+            The combination of roles to assign.
+        
+        """
         listOfRoles = [Merger(), Chopper(), Deliverer(), Baker(), Cooker(), Cleaner(), Frier()]
         listOfRoles2 = [ChoppingWaiter(), MergingWaiter(), CookingWaiter(), ExceptionalChef(), BakingWaiter(), FryingWaiter()]
         SingleAgentRole = [InvincibleWaiter()]
@@ -204,19 +218,59 @@ class OvercookedEnvironment(gym.Env):
             if actionsNotSatisfied.issubset(currentSet):
                 return eachCombination
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def roleAssignmentAlgorithm(self, typeUsed, num_agents):
+        """ The main role allocation system, allocate manually based
+        on the level of time complexity required. 
+
+        Note, for unbalanced / none / extreme, please only utilize two
+        agents maximum in simulation; while for three, although it is
+        possible for three agents, it is generally not possible for
+        very-easy map due to limited space (Not implemented).
+
+        Args:
+            typeUsed: The role allocation mechanism
+            num_agents: Number of agents in the environment
+        
+        Return:
+            A list of role assignment for simulation
+
+        """
         if typeUsed == "extreme":
             return [InvincibleWaiter(), IdlePerson()]
+        
         elif typeUsed == "none":
             return [InvincibleWaiter(), InvincibleWaiter()]
+        
         elif typeUsed == "unbalanced":
-            return [CookingWaiter(), ExceptionalChefMerger()]
+            if self.arglist.level.endswith("CF"):
+                return [FryingWaiter(), ExceptionalChefMerger()]
+            elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                return [Chopper(), InvincibleWaiter()]
+            elif self.arglist.level.endswith("burger"):
+                return [CookingWaiter(), ExceptionalChefMerger()]
+            return [InvincibleWaiter(), InvincibleWaiter()]
+        
         elif typeUsed == "three":
             if num_agents == 2:
-                return [ExceptionalChefMerger(), CookingMergingWaiter()]
+                if self.arglist.level.endswith("CF"):
+                    return [ExceptionalChefMerger(), FryingMergingWaiter()]
+                elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                    return [ChoppingMerger(), MergingWaiter()]
+                elif self.arglist.level.endswith("burger"):
+                    return [ExceptionalChefMerger(), CookingMergingWaiter()]
+                return [InvincibleWaiter(), InvincibleWaiter()]
+            
             elif num_agents == 3:
-                return [ChoppingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+                if self.arglist.level.endswith("CF"):
+                    return [FryingWaiter(), ExceptionalChefMerger(), MergingWaiter()]
+                elif self.arglist.level.endswith("tomato") or self.arglist.level.endswith("salad"):
+                    return [ChoppingWaiter(), Merger(), MergingWaiter()]
+                elif self.arglist.level.endswith("burger"):
+                    return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
+                return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def reset(self):
         self.world = World(arglist=self.arglist)
         self.recipes = []
@@ -262,16 +316,18 @@ class OvercookedEnvironment(gym.Env):
         else:
             self.update_display_DQN_conv()   
             self.update_display_DQN()
-            # return self.repDQN
             return self.repDQN_conv
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def world_size_action_size(self):
-        # return len(self.repDQN), 4
+        """
+        Return the current size of the representation, and action size.
+        """
         return len(self.repDQN_conv.flatten()), 4
 
     def close(self):
         return
-
+    
     def step(self, action_dict):
         # Track internal environment info.
         self.t += 1
@@ -308,7 +364,16 @@ class OvercookedEnvironment(gym.Env):
                 "done": done, "termination_info": self.termination_info}
         return new_obs, reward, done, info
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_step(self, action_dict):
+        """
+        Perform a Q-Learning step.
+
+        Args:
+            action_dict: A dictionary of actions
+        Return:
+            The required information to store in transition memory
+        """
         self.t += 1
         print("===============================")
         print("[environment.step] @ TIMESTEP {}".format(self.t))
@@ -327,31 +392,36 @@ class OvercookedEnvironment(gym.Env):
         # Execute.
         self.execute_navigation()
 
-        # May need to Visualize and store model
-        # new_obs = copy.copy(self)
-
         # States, rewards, done
         done = self.done()
         reward = self.dqn_reward()
+
+        # Remove a subtask
         self.subtask_reduction()
+        
         # self.update_display_DQN()
         self.update_display_DQN_conv()
         self.update_display()
 
+        # Record the image.
         if self.arglist.record:
             self.game.save_image_obs(self.t)
-        # next_state = self.repDQN
         next_state = self.repDQN_conv
 
         info = {
             "t": self.t,
-            # "obs": new_obs,
             "done": done, "termination_info": self.termination_info
         }
 
         return next_state, reward, done, info
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def subtask_reduction(self):
+        """
+        Remove the subtasks that are completed.
+        Return:
+            Whether the subtask has been removed.
+        """
         delete = []
         for subtask in self.subtasks_left:
             _, goal_obj = nav_utils.get_subtask_obj(subtask)
@@ -368,7 +438,17 @@ class OvercookedEnvironment(gym.Env):
             return True
         return False  
     
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def single_subtask_reduction(self, subtask):
+        """
+        Check if a subtask is completed, and whether
+        it has reach the end of the simulation.
+
+        Args:
+            subtask: The subtask to be checked
+        Return:
+            Whether the subtask is finished, and whether the game is finished.
+        """
         doneCheck = False
         _, goal_obj = nav_utils.get_subtask_obj(subtask)
         goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
@@ -380,19 +460,17 @@ class OvercookedEnvironment(gym.Env):
         elif len(goal_obj_locs) != 0:
             return True, doneCheck
         return False, doneCheck
-
-    def holding_important_object(self, subtask_agent_names, subtask):
-        bonus = 0
-        start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
-        for agent in self.sim_agents:
-            if agent.name in subtask_agent_names:
-                if agent.holding == start_obj:
-                    bonus += 1
-                elif agent.holding == goal_obj:
-                    bonus += 5
-        return bonus
     
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def role_bonus(self, subtask_agent_names, subtask):
+        """
+        The additional rewards if agents are holding objects within their roles.
+        Args:
+            subtask_agent_names: The list of agent names
+            subtask: The subtask to be checked
+        Return:
+            The added bonus after checking
+        """
         bonus = 0
         start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
         for agent in self.sim_agents:
@@ -405,7 +483,6 @@ class OvercookedEnvironment(gym.Env):
                     if agent.holding == goal_obj: bonus -= 5
         
         return bonus
-
 
     def done(self):
         # Done if the episode maxes out
@@ -437,9 +514,14 @@ class OvercookedEnvironment(gym.Env):
     def reward(self):
         return 1 if self.successful else 0
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_reward(self):
         """
-        I wrote this.
+        Calculate the cumulative reward based on current state representation.
+        It is calculated for each agent.
+
+        Return:
+            The final reward of this state.
         """
         reward = 0
         for subtask in self.subtasks_left:
@@ -449,21 +531,20 @@ class OvercookedEnvironment(gym.Env):
                 if doneCheck: reward += 20
             else:
                 reward -= 1
-            # start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
-            # subtask_action_obj = nav_utils.get_subtask_action_obj(subtask)
-            # distance = self.get_lower_bound_for_subtask_given_objs(
-            #     subtask, 
-            #     ["agent-1", "agent-2"],
-            #     start_obj,
-            #     goal_obj,
-            #     subtask_action_obj,
-            # )
-            # print(start_obj, goal_obj, distance)
-            # reward -= distance
+            start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
+            subtask_action_obj = nav_utils.get_subtask_action_obj(subtask)
+            distance = self.get_lower_bound_for_subtask_given_objs(
+                subtask, 
+                ["agent-1", "agent-2"],
+                start_obj,
+                goal_obj,
+                subtask_action_obj,
+            )
+            reward -= 0.3 * distance
 
-            # bonus = self.holding_important_object(["agent-1", "agent-2"], subtask)
-            # bonus2 = self.role_bonus(["agent-1", "agent-2"], subtask)
-            # reward = reward + bonus + bonus2
+            # Additional bonus for holding objects within responsibilities.
+            bonus = self.role_bonus(["agent-1", "agent-2"], subtask)
+            reward = reward + bonus
         
         return reward
 
@@ -481,7 +562,12 @@ class OvercookedEnvironment(gym.Env):
             x, y = agent.location
             self.rep[y][x] = str(agent)
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_DQN(self):
+        """
+        Update the display of the DQN with a list of 
+        positions, currently archived.
+        """
         self.repDQN = self.world.update_display_dqn()
         for agent in self.sim_agents:
             x, y = agent.location
@@ -489,7 +575,12 @@ class OvercookedEnvironment(gym.Env):
             self.repDQN.append(y)
             self.repDQN.append(x)
     
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_DQN_conv(self):
+        """
+        Update the display of the DQN with a 3D representation
+        that can be checked in world.py.
+        """
         self.repDQN_conv = self.world.update_display_dqn_conv(self.widthOfGame, self.heightOfGame)
         for agent in self.sim_agents:
             x, y = agent.location
@@ -611,15 +702,36 @@ class OvercookedEnvironment(gym.Env):
                 A_locs=tuple(A_locs),
                 B_locs=tuple(B_locs)) + holding_penalty
 
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def nextLocationBase(self, agent_action, currentLocation):
+        """
+        Return the action taken and the next gridsquare after action.
+        Args:
+            agent_action: The action taken by the agent
+            currentLocation: The agent's current location
+        Return:
+            The object at the location + action
+        """
         return self.world.get_gridsquare_at(location=tuple(np.asarray(currentLocation) + np.asarray(agent_action)))
     
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def legal_actions(self, agent_name):
+        """
+        The current legal actions for the agent specified.
+        Involved in DQN calculation, to avoid repetitive state and 
+        non-stop loop.
+
+        Args: 
+            agent_name: Name of the agent
+        Return:
+            List of legal actions
+        """
         actions = [(0,1), (0,-1), (1,0), (-1,0)]
         legal_actions = []
         for agent in self.sim_agents:
             if agent.name == agent_name:
                 if agent.holding:
+                    # If holding anything, can move anywhere
                     return actions
                 else:
                     for action in actions:
@@ -631,8 +743,6 @@ class OvercookedEnvironment(gym.Env):
         
         if not legal_actions: legal_actions.append(random.choice(actions))
         return legal_actions
-                    
-
 
     def is_occupied_location(self, agent_action, currentLocation):
         return self.world.is_occupied(location=tuple(np.asarray(currentLocation) + np.asarray(agent_action))) or self.world.is_delivery(location=tuple(np.asarray(currentLocation) + np.asarray(agent_action)))
@@ -672,7 +782,21 @@ class OvercookedEnvironment(gym.Env):
             execute[1] = False
         return execute
     
+     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def is_collision_alter(self, agent1_loc, agent2_loc, agent1_action, agent2_action):
+        """
+        Check if the collision still occurs without the constraints of agent
+        collision. Currently archived due to limited effectiveness.
+        
+        Args:
+            agent1_loc: Location of agent 1
+            agent2_loc: Location of agent 2
+            agent1_action: Action of agent 1
+            agent2_action: Action of agent 2
+
+        Return:
+            Whether the agents pass the collision check
+        """
         execute = [True, True]
         agent1_next_loc = tuple(np.asarray(agent1_loc) + np.asarray(agent1_action))
         if self.world.get_gridsquare_at(location=agent1_next_loc).collidable:
@@ -681,8 +805,6 @@ class OvercookedEnvironment(gym.Env):
 
         agent2_next_loc = tuple(np.asarray(agent2_loc) + np.asarray(agent2_action))
         if self.world.get_gridsquare_at(location=agent2_next_loc).collidable:
-            # Revert back because agent collided.
-            # print(type(self.world.get_gridsquare_at(location=agent2_next_loc)))
             agent2_next_loc = agent2_loc
         
         return execute
@@ -728,7 +850,6 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             interact(agent=agent, world=self.world)
             self.agent_actions[agent.name] = agent.action
-
 
     def cache_distances(self):
         """Saving distances between world objects."""

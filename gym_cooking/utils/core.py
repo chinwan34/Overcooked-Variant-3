@@ -120,6 +120,7 @@ class InvincibleWaiter(Role):
 # -----------------------------------------------------------
 GridSquareRepr = namedtuple("GridSquareRepr", "name location holding")
 
+
 class Rep:
     FLOOR = ' '
     COUNTER = '-'
@@ -132,6 +133,8 @@ class Rep:
     LETTUCE = 'l'
     ONION = 'o'
     PLATE = 'p'
+
+    # Additional objects created for project.
     BREAD = 'b'
     BURGERMEAT = 'm'
     FISH = 'f'
@@ -172,7 +175,8 @@ class GridSquare:
         temp = self.holding
         self.holding = None
         return temp
-    
+
+# PROJECT INVOLVED THIS CLASS CREATION.
 class TrashCan(GridSquare):
     def __init__(self, location):
         GridSquare.__init__(self, "TrashCan", location)
@@ -183,6 +187,7 @@ class TrashCan(GridSquare):
     def __hash__(self):
         return GridSquare.__hash__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Sink(GridSquare):
     def __init__(self, location):
         GridSquare.__init__(self, "Sink", location)
@@ -193,6 +198,7 @@ class Sink(GridSquare):
     def __hash__(self):
         return GridSquare.__hash__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Fryer(GridSquare):
     def __init__(self, location):
         GridSquare.__init__(self, "Fryer", location)
@@ -203,6 +209,7 @@ class Fryer(GridSquare):
     def __hash__(self):
         return GridSquare.__hash__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class PizzaOven(GridSquare):
     def __init__(self, location):
         GridSquare.__init__(self, "PizzaOven", location)
@@ -213,6 +220,7 @@ class PizzaOven(GridSquare):
     def __hash__(self):
         return GridSquare.__hash__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class CookingPan(GridSquare):
     def __init__(self, location):
         GridSquare.__init__(self, "CookingPan", location)
@@ -334,6 +342,8 @@ class Object:
     def contains(self, c_name):
         return c_name in list(map(lambda c : c.name, self.contents))
 
+    # Auxiliary function to check whether contents needs to be done with actions
+    # PROJECT INVOLVED THESE FUNCTIONS CHANGE.
     def needs_chopped(self):
         if len(self.contents) > 1: return False
         return self.contents[0].needs_chopped()
@@ -423,6 +433,7 @@ class Object:
         return self.is_merged()
 
 
+# PROJECT INVOLVED THIS FUNCTION CHANGE.
 def mergeable(obj1, obj2):
     # query whether two objects are mergeable
     contents = obj1.contents + obj2.contents
@@ -458,6 +469,7 @@ class FoodState:
     MERGED = globals()['recipe'].__dict__['Merged']
     UNCLEANED = globals()['recipe'].__dict__['Uncleaned']
 
+# PROJECT INVOLVED THIS CLASS CHANGE.
 class FoodSequence:
     UNCLEANED_FRESH = [FoodState.UNCLEANED, FoodState.FRESH]
     FRESH = [FoodState.FRESH]
@@ -497,6 +509,8 @@ class Food:
     def update_names(self):
         self.full_name = '{}{}'.format(self.get_state(), self.name)
     
+    # Auxiliary objects to overwrite the object methods.
+    # PROJECT INVOLVED THESE FUNCTIONS CHANGE.
     def needs_cleaned(self):
         return self.state_seq[(self.state_index)%len(self.state_seq)] == FoodState.UNCLEANED
 
@@ -524,6 +538,7 @@ class Food:
     def _set_color(self):
         pass
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class BurgerMeat(Food):
     def __init__(self, state_index=0):
         self.state_index = state_index
@@ -540,6 +555,7 @@ class BurgerMeat(Food):
     def needs_chopped(self):
         return False
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Bread(Food):
     def __init__(self, state_index=0):
         self.state_index = state_index
@@ -556,6 +572,7 @@ class Bread(Food):
     def needs_chopped(self):
         return False
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class PizzaDough(Food):
     def __init__(self, state_index=0):
         self.state_index = state_index
@@ -572,6 +589,7 @@ class PizzaDough(Food):
     def needs_chopped(self):
         return False
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Cheese(Food):
     def __init__(self, state_index=0):
         self.state_index = state_index
@@ -586,6 +604,7 @@ class Cheese(Food):
     def __str__(self):
         return Food.__str__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class FriedChicken(Food):
     def __init__(self, state_index = 0):
         state_index = 0
@@ -601,6 +620,7 @@ class FriedChicken(Food):
     def __str__(self):
         return Food.__str__(self)
 
+# PROJECT INVOLVED THIS CLASS CREATION.
 class Fish(Food):
     def __init__(self, state_index=0):
         state_index = 0
@@ -671,6 +691,9 @@ class Plate:
     def done(self):
         return (self.state_index % len(self.state_seq)) == len(self.state_seq) - 1
     
+    # Following functions update states and names of plate based on
+    # The reverse index [Dirty, Clean] representation.
+    # PROJECT INVOLVED THESE FUNCTIONS CREATION.
     def update_names(self):
         self.full_name = "Plate"
     

@@ -98,7 +98,16 @@ def get_single_actions(env, agent):
     actions.append((0, 0))
     return actions
 
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def get_single_actions_alter(env, agent):
+    """
+    Append actions that are legal, currently archived.
+    Args:
+        env: The environment of the simulation
+        agent: The simulation agent
+    Return:
+        A list of actions
+    """
     actions = []
 
     agent_locs = list(map(lambda a: a.location, env.sim_agents))
@@ -154,7 +163,7 @@ def get_min_dist_between(A_locations, B_locations):
         if A_min < min_dist: min_dist = A_min
     return min_dist
 
-
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def get_obj(obj_string, type_, state, location=(None, None)):
     # Core.Supply objects
     if type_ == "is_supply":
@@ -169,14 +178,8 @@ def get_obj(obj_string, type_, state, location=(None, None)):
             objects = [get_obj(obj_string=s,
                 type_="is_object", state=FoodState.FRESH) for s in obj_strs]
 
-            # objects = [get_obj(obj_string=s,
-            #       type_="is_object", state=StringToObject.get(s)().state_seq[0]) for s in obj_strs]
-            # getting into right food env
             for i, s in enumerate(obj_strs):
                 if s == "Plate":
-                    # objects[i] = get_obj(obj_string=s,
-                    #     type_="is_object",
-                    #     state=StringToObject.get("Plate")().state_seq[1])
                     continue
                 objects[i] = get_obj(obj_string=s,
                         type_="is_object",
@@ -197,11 +200,13 @@ def get_obj(obj_string, type_, state, location=(None, None)):
         else:
             raise NotImplementedError("Type {} is not recognized".format(type_))
 
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def get_subtask_action_obj(subtask):
     if isinstance(subtask, recipe.Get):
         obj = get_obj(obj_string=subtask.args[0], type_="is_supply", state=None)
     elif isinstance(subtask, recipe.Chop):
         obj = get_obj(obj_string="Cutboard", type_="is_supply", state=None)
+     # Additional subtasks created
     elif isinstance(subtask, recipe.Fry):
         obj = get_obj(obj_string="Fryer", type_="is_supply", state=None)
     elif isinstance(subtask, recipe.Cook):
@@ -220,6 +225,7 @@ def get_subtask_action_obj(subtask):
         raise ValueError("Did not recognize subtask {} so could not find the appropriate subtask location".format(subtask))
     return obj
 
+ # PROJECT INVOLVED THIS FUNCTION CHANGE.
 def get_subtask_obj(subtask):
     if isinstance(subtask, recipe.Chop):
         # start off raw, get chopped
@@ -234,6 +240,7 @@ def get_subtask_obj(subtask):
         goal_obj = get_obj(obj_string=subtask.args[0], 
                 type_="is_object", state=FoodState.FRESH)
     
+     # Additional subtasks involved
     elif isinstance(subtask, recipe.Fry):
         start_obj = get_obj(obj_string=subtask.args[0],
                 type_="is_object", state=FoodState.UNFRIED)
@@ -264,21 +271,11 @@ def get_subtask_obj(subtask):
 
         for i, o in enumerate(object_list):
             if isinstance(o.contents[0], Plate):
-            #     start_obj.append(get_obj(obj_string="Plate",
-            #             type_="is_object",
-            #             state=StringToObject.get("Plate")().state_seq[0]))
-            #     continue
                 start_obj.append(copy.copy(o))
                 continue
 
             object_list[i] = get_obj(obj_string=subtask.args[i],
                     type_="is_object", state=o.contents[0].state_seq[-1])
-            # Must be in the last state before merging
-            # if isinstance(o.contents[0], Plate):
-            #     start_obj.append(get_obj(obj_string="Plate",
-            #             type_="is_object",
-            #             state=StringToObject.get("Plate")().state_seq[0]))
-            # else:
             start_obj.append(get_obj(obj_string=subtask.args[i],
                 type_="is_object", state=o.contents[0].state_seq[-1]))
 
