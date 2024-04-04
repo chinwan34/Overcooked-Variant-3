@@ -2,10 +2,6 @@ import numpy as np
 import random
 from utils.DQNagent import DQNAgent
 import pandas as pd
-import matplotlib.pyplot as plt
-import argparse
-import os
-import seaborn as sns
 
 class mainAlgorithm:
     """
@@ -243,63 +239,4 @@ class mainAlgorithm:
         """
         filename = "./utils/dqn_reward/statistics_file.csv"
         return filename
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="for parsing")
-    parser.add_arguments("--rt", "--reward-timesteps", type=bool, default="False", help="Reward-timesteps graph")
-    parser.add_arguments("--rl", "--reward-legend", type=bool, default="False", help="Average reward")
-    parser.add_arguments("--tl", "--timesteps-legend", type=bool, default="False", help="Average TimeSteps")
-    parser.add_arguments("--ra", "--reward-alpha", type=bool, default="False", help="Reward to alpha")
-    return parser.parse_args()
-
-def main_loop():
-    path_save = os.path.join(os.getcwd(), 'dqn_graphs')
-    if not os.path.exists(path_save):
-        os.makedirs(path_save)
-    
-    df = import_data()
-    if df:
-        plot_graph(df, arglist)
-
-def import_data():
-    try:
-        df = pd.readcsv("./utils/dqn_reward/statistics_file.csv")
-        return df
-    except FileNotFoundError:
-        return None
-    
-
-def plot_graph(df, arglist, path_save):
-    color_palette = sns.color_palette()
-    sns.set_style('ticks')
-    sns.set_context('talk', font_scale=1)
-
-    if arglist.reward_timesteps:
-        plt.figure(figsize=(10,10))
-        sns.barplot(x="Steps", y="Rewards", data=df, palette=color_palette, ci=68).set(
-            xlabel=""
-        )
-        legend = plt.legend(frameon=False)
-        legend_fig = legend.figure
-        legend_fig.canvas.draw()
-
-        legend_fig.savefig(os.path.join(path_save, 'steps_rewards_legend.png'), dpi="figure")
-        plt.close()
-
-    if arglist.reward_legend:
-        pass
-    if arglist.timesteps_legend:
-        pass
-    if arglist.reward_alpha:
-        pass
-
-
-
-
-if __name__ == "__main__":
-    arglist = parse_arguments()
-    main_loop()
-
-    
-
 
