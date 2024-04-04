@@ -303,13 +303,11 @@ def dqn_main(arglist):
         time_steps.append(step)
     
     if arglist.game_play > 0:
-        print("Average score: ", sum(rewards)/len(rewards))
-        print("Success Rate: ", dones.count(True)/len(dones))
-        print("Average Time-step", sum(time_steps)/len(time_steps))
+        print("Average score: ", sum(rewards)//len(rewards))
+        print("Success Rate: ", dones.count(True)//len(dones))
+        print("Average Time-step", sum(time_steps)//len(time_steps))
 
-        dqnClass.store_statistics(dlstatistics_file, sum(time_steps)/len(time_steps), sum(rewards)/len(rewards), arglist)
-
-
+        dqnClass.store_statistics(dlstatistics_file, sum(time_steps)//len(time_steps), sum(rewards)//len(rewards), arglist)
 
 if __name__ == '__main__':
     arglist = parse_arguments()

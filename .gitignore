@@ -12,12 +12,12 @@ gym_cooking/misc/metrics/*recipe*/
 gym_cooking/misc/game/record/
 gym_cooking/misc/game/screenshots/
 gym_cooking/utils/dqn_reward/
-gym_cooking/utils/dqn_result/
 
 # Visualizations
 gym_cooking/visualize_all.sh
 gym_cooking/visualize_level.py
 gym_cooking/misc/visualizations/
+gym_cooking/misc/metrics/dqn_graphs/
 
 # Human experiments
 gym_cooking/human_experiments/
