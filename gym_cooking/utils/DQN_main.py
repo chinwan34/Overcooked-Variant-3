@@ -1,6 +1,8 @@
 import numpy as np
 import random
 from utils.DQNagent import DQNAgent
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class mainAlgorithm:
     """
@@ -15,7 +17,7 @@ class mainAlgorithm:
         self.update_step = self.arglist.replay
         self.final_episodes = 5
 
-    def run(self, agents):
+    def run(self, agents, dlreward_file):
         """
         The simulation procedure, with arguments
         specified. After all simulations finished, the relevant 
@@ -23,6 +25,7 @@ class mainAlgorithm:
 
         Args:
             agents: The DQNAgents for simulation and update
+            dlreward_file: Filename for storing rewards on this run
         """
         time_steps = []
         all_step = 0
@@ -78,6 +81,10 @@ class mainAlgorithm:
                         print("Got in episode for updates")
                         agent.dlmodel.save_model()               
                     maxScore = rewardTotal
+            
+            if episode % 1 == 0:
+                df = pd.DataFrame(rewards, columns=['currScore'])
+                df.to_csv(dlreward_file)
             print("Final score:{}, Steps:{}, and whether goal reached:{}".format(rewardTotal, step, self.environment.successful))
             
 
@@ -147,6 +154,18 @@ class mainAlgorithm:
         file = './utils/dqn_result/{}'.format(filename)
         return file
     
+    def set_filename_reward(self, filename):
+        """
+        Set the filename for the rewards accumulated.
+
+        Args:
+            filename: The name specified for storage
+        Return:
+            The file name
+        """
+        file = './utils/dqn_reward/{}'.format(filename)
+        return file
+    
     def filename_create_dlmodel(self):
         """
         Create the filename of the model.
@@ -162,7 +181,20 @@ class mainAlgorithm:
         )
         return filename
 
-
+    def filename_create_reward(self):
+        """
+        Create the reward file of the model.
+        Return:
+            Filename created
+        """
+        filename = "reward-agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}.csv".format(
+            "dqn", 
+            self.arglist.learning_rate, 
+            self.arglist.replay,
+            self.arglist.number_training,
+            self.arglist.role,
+        )
+        return filename
 
 
 

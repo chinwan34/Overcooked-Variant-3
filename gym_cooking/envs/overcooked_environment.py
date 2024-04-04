@@ -476,11 +476,11 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             if agent.name in subtask_agent_names:
                 if any([isinstance(subtask, action) for action in agent.role.probableActions]):
-                    if agent.holding == start_obj: bonus += 2
-                    if agent.holding == goal_obj: bonus += 5
+                    if agent.holding == start_obj: bonus += 0.02
+                    if agent.holding == goal_obj: bonus += 0.05
                 else:
-                    if agent.holding == start_obj: bonus -= 2
-                    if agent.holding == goal_obj: bonus -= 5
+                    if agent.holding == start_obj: bonus -= 0.02
+                    if agent.holding == goal_obj: bonus -= 0.05
         
         return bonus
 
@@ -527,8 +527,8 @@ class OvercookedEnvironment(gym.Env):
         for subtask in self.subtasks_left:
             finishedSubtask, doneCheck = self.single_subtask_reduction(subtask)
             if finishedSubtask:
-                reward += 10
-                if doneCheck: reward += 20
+                reward += 50
+                if doneCheck: reward += 120
             else:
                 reward -= 1
             start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
@@ -540,7 +540,7 @@ class OvercookedEnvironment(gym.Env):
                 goal_obj,
                 subtask_action_obj,
             )
-            reward -= 0.3 * distance
+            reward -= 0.003 * distance
 
             # Additional bonus for holding objects within responsibilities.
             bonus = self.role_bonus(["agent-1", "agent-2"], subtask)
