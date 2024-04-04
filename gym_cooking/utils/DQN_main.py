@@ -82,9 +82,10 @@ class mainAlgorithm:
                         agent.dlmodel.save_model()               
                     maxScore = rewardTotal
             
-            if episode % 1 == 0:
+            if episode % 10 == 0:
                 df = pd.DataFrame(rewards, columns=['currScore'])
                 df.to_csv(dlreward_file)
+            
             print("Final score:{}, Steps:{}, and whether goal reached:{}".format(rewardTotal, step, self.environment.successful))
             
 
@@ -195,6 +196,32 @@ class mainAlgorithm:
             self.arglist.role,
         )
         return filename
+
+    def filename_create_statistics(self):
+        """
+        Create the statistics file of the model.
+        Return:
+            Filename created
+        """
+        filename = "./utils/dqn_reward/statistics_file.csv"
+        return filename
+    
+    def store_statistics(self, filename, steps, rewards, arglist):
+        try:
+            df = pd.read_csv(filename)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=["Episodes", "Test number", "Alpha", "Level", "Role", "Steps", "Rewards"])
+        df = df.append({
+            "Episodes": arglist.number_training,
+            "Test number": arglist.game_play,
+            "Alpha": arglist.learning_rate,
+            "Level": arglist.level,
+            "Role": arglist.role,
+            "Steps": steps,
+            "Rewards": rewards
+        }, ignore_index=True)
+
+        df.to_csv(filename)
 
 
 

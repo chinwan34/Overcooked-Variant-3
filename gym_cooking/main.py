@@ -284,11 +284,12 @@ def dqn_main(arglist):
     # Set file name at utils/dqn_result
     dlmodel_file = dqnClass.set_filename(dqnClass.filename_create_dlmodel())
     dlreward_file = dqnClass.set_filename_reward(dqnClass.filename_create_reward())
+    dlstatistics_file = dqnClass.filename_create_statistics()
     state_size, action_size = env.world_size_action_size()
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
     # Main running algorithm
-    dqnClass.run(dqn_agents, dlreward_file)
+    # dqnClass.run(dqn_agents, dlreward_file)
 
     dones = []
     rewards = []
@@ -305,6 +306,10 @@ def dqn_main(arglist):
         print("Average score: ", sum(rewards)/len(rewards))
         print("Success Rate: ", dones.count(True)/len(dones))
         print("Average Time-step", sum(time_steps)/len(time_steps))
+
+        dqnClass.store_statistics(dlstatistics_file, sum(time_steps)/len(time_steps), sum(rewards)/len(rewards), arglist)
+
+
 
 if __name__ == '__main__':
     arglist = parse_arguments()
