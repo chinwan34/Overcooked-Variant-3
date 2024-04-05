@@ -221,7 +221,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                         color=COLORS[len(dqn_agents)],
                         role=roleList[index],
                         agent_index=len(dqn_agents),
-                        dlmodel_name=dlmodel
+                        dlmodel_name=dlmodel[index]
                     )
                     dqn_agents.append(dqn_agent)
                     if len(dqn_agents) >= arglist.num_agents:

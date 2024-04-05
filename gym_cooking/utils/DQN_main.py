@@ -73,7 +73,7 @@ class mainAlgorithm:
             time_steps.append(step)
             rewards.append(rewardTotal)
 
-            if episode % 10 == 0:
+            if episode % 100 == 0:
                 # maximum score update
                 if rewardTotal > maxScore:
                     for agent in agents:
@@ -81,7 +81,7 @@ class mainAlgorithm:
                         agent.dlmodel.save_model()               
                     maxScore = rewardTotal
             
-            if episode % 10 == 0:
+            if episode % 100 == 0:
                 df = pd.DataFrame(rewards, columns=['currScore'])
                 df.to_csv(dlreward_file)
             
@@ -151,8 +151,9 @@ class mainAlgorithm:
         Return:
             The file name
         """
-        file = './utils/dqn_result/{}'.format(filename)
-        return file
+        file1 = './utils/dqn_result/{}'.format(filename[0])
+        file2 = './utils/dqn_result/{}'.format(filename[1])
+        return [file1, file2]
     
     def set_filename_reward(self, filename):
         """
@@ -172,14 +173,21 @@ class mainAlgorithm:
         Return:
             Filename created
         """
-        filename = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}.h5".format(
+        filename1 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-agent_1.h5".format(
             "dqn", 
             self.arglist.learning_rate, 
             self.arglist.replay,
             self.arglist.number_training,
-            self.arglist.role,
+            self.arglist.role
         )
-        return filename
+        filename2 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-agent_2.h5".format(
+            "dqn", 
+            self.arglist.learning_rate, 
+            self.arglist.replay,
+            self.arglist.number_training,
+            self.arglist.role
+        )
+        return [filename1, filename2]
 
     def filename_create_reward(self):
         """

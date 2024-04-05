@@ -313,6 +313,13 @@ class World:
     def is_collidable(self, location):
         return location in list(map(lambda o: o.location, list(filter(lambda o: o.collidable, self.get_object_list()))))
 
+    def get_object_locs_cutboard(self):
+        if "Cutboard" not in self.objects.keys():
+            return []
+        
+        return list(map(lambda o: o.location, list(filter(lambda o: Cutboard == o,
+                self.objects["Cutboard"]))))
+
     def get_object_locs(self, obj, is_held):
         if obj.name not in self.objects.keys():
             return []
