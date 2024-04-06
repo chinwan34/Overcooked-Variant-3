@@ -13,7 +13,7 @@ def parse_arguments():
     parser.add_argument("--epsilon-graph", action="store_true", default=False, help="Epsilon decay over timesteps")
     parser.add_argument("--timestep-role", action="store_true", default=False, help="Timestep against role")
     parser.add_argument("--epoch-reward", action="store_true", default=False, help="Epoch to reward barplot")
-    parser.add_argument("--reward-alpha", action="store_true", default=False, help="Reward to alpha")
+    parser.add_argument("--reward-role", action="store_true", default=False, help="Reward to the role")
 
     # Only for epsilon-graph and reward-legend
     parser.add_argument("--lr", type=float, default=0.00025, help="Only for reward legend, learning rate of simulation")
@@ -120,6 +120,8 @@ def plot_graph(df, arglist, path_save):
         print("Please specify level, exiting")
         sys.exit(1)
     
+    palette = plt.get_cmap('tab10')
+    
     # Other types of graphs 
     if arglist.timestep_episodes:
         plt.figure(figsize=(10,10))
@@ -135,10 +137,10 @@ def plot_graph(df, arglist, path_save):
             print("No steps or episodes column found.")
             sys.exit(1)
 
-        plt.bar(episodes, steps)
+        plt.bar(episodes, steps, color=palette(range(len(df_te))))
         plt.xlabel("episodes")
         plt.ylabel("steps")
-        plt.savefig(os.path.join(path_save, 'steps-episodes-legend-{}.png'.format(arglist.level)), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'episodes-steps-legend-{}.png'.format(arglist.level)), dpi="figure")
         
         print("Completed timestep episodes graph storage.")
         plt.close()
@@ -157,10 +159,10 @@ def plot_graph(df, arglist, path_save):
             print("No rewards or episodes found.")
             sys.exit(1)
         
-        plt.bar(episodes, reward)
+        plt.bar(episodes, reward, color=palette(range(len(df_re))))
         plt.xlabel("episodes")
         plt.ylabel("rewards")
-        plt.savefig(os.path.join(path_save, 'reward-episodes-legend-{}.png'.format(arglist.level)), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'episodes-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed reward episodes graph storage.")
         plt.close()
@@ -176,14 +178,34 @@ def plot_graph(df, arglist, path_save):
             print("No steps or role found")
             sys.exit(1)
         
-        plt.bar(role, steps)
+        plt.bar(role, steps, color=palette(range(len(df_tr))))
         plt.xlabel("role")
         plt.ylabel("steps")
-        plt.savefig(os.path.join(path_save, 'steps-role-legend-{}.png'.format(arglist.level)), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'role-steps-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed role timestep graph storage.")
         plt.close()
     
+    if arglist.reward_role:
+        plt.figure(figsize=(10,10))
+        try:
+            df_rr = dfNew.groupby('Role')['Rewards'].max().reset_index()
+            df_rr.columns = ['Role', 'Rewards']
+            role = df_rr['Role']
+            reward = df_rr['Rewards']
+        except KeyError:
+            print("No role or rewards found")
+            sys.exit(1)
+        
+        plt.bar(role, reward, color=palette(range(len(df_rr))))
+        plt.xlabel("role")
+        plt.ylabel("rewards")
+        plt.title("Reward-role")
+        plt.savefig(os.path.join(path_save, 'roles-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
+
+        print("Completed role reward graph storage.")
+        plt.close()
+
     if arglist.epoch_reward:
         plt.figure(figsize=(10,10))
         try:
@@ -198,7 +220,7 @@ def plot_graph(df, arglist, path_save):
             print("No epoch or reward found")
             sys.exit(1)
 
-        plt.bar(epochs, reward)
+        plt.bar(epochs, reward, color=palette(range(len(df_er))))
         plt.xlabel("epochs")
         plt.ylabel("rewards")
         plt.savefig(os.path.join(path_save, 'epochs-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
