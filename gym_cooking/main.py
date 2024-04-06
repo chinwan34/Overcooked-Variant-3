@@ -290,7 +290,7 @@ def dqn_main(arglist):
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
     # Main running algorithm
-    # dqnClass.run(dqn_agents, dlreward_file)
+    dqnClass.run(dqn_agents, dlreward_file)
 
     dones = []
     rewards = []

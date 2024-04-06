@@ -128,7 +128,6 @@ class mainAlgorithm:
             next_state = np.array(next_state)
             next_state = next_state.ravel()
 
-            print(reward)
             state = next_state
 
             rewardTotal += reward
@@ -229,7 +228,7 @@ class mainAlgorithm:
             arglist: List of arguments specified
         """
         try:
-            df = pd.read_csv(filename)
+            df = pd.read_csv(filename, index_col=0)
         except FileNotFoundError:
             df = pd.DataFrame(columns=["Episodes", "Test number", "Alpha", "Epochs", "Level", "Role", "Steps", "Rewards"])
         df = df.append({
