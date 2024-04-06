@@ -1,7 +1,6 @@
 import numpy as np
-import random
-from utils.DQNagent import DQNAgent
 import pandas as pd
+import os
 
 class mainAlgorithm:
     """
@@ -227,6 +226,8 @@ class mainAlgorithm:
             rewards: Average rewards for simulation result
             arglist: List of arguments specified
         """
+        if not os.path.exists("utils/dqn_reward"):
+            os.makedirs("utils/dqn_reward")
         try:
             df = pd.read_csv(filename, index_col=0)
         except FileNotFoundError:
