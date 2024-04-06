@@ -30,6 +30,7 @@ class mainAlgorithm:
         all_step = 0
         rewards = []
         maxScore = float("-inf")
+        epsilons = []
         for episode in range(self.num_training):
             print("EPISODE------------", episode, "-----------EPISODE")
             state = self.environment.reset()
@@ -70,6 +71,8 @@ class mainAlgorithm:
                 step += 1
                 state = next_state
             
+            epsilons.append(agents[0].epsilon)
+            
             time_steps.append(step)
             rewards.append(rewardTotal)
 
@@ -77,12 +80,13 @@ class mainAlgorithm:
                 # maximum score update
                 if rewardTotal > maxScore:
                     for agent in agents:
-                        print("Got in episode for updates")
+                        print("GOT IN FOR UPDATES!!!!!!!!")
                         agent.dlmodel.save_model()               
                     maxScore = rewardTotal
             
             if episode % 100 == 0:
                 df = pd.DataFrame(rewards, columns=['currScore'])
+                df['epsilon'] = epsilons
                 df.to_csv(dlreward_file)
             
             print("Final score:{}, Steps:{}, and whether goal reached:{}".format(rewardTotal, step, self.environment.successful))
@@ -124,6 +128,7 @@ class mainAlgorithm:
             next_state = np.array(next_state)
             next_state = next_state.ravel()
 
+            print(reward)
             state = next_state
 
             rewardTotal += reward
@@ -226,11 +231,12 @@ class mainAlgorithm:
         try:
             df = pd.read_csv(filename)
         except FileNotFoundError:
-            df = pd.DataFrame(columns=["Episodes", "Test number", "Alpha", "Level", "Role", "Steps", "Rewards"])
+            df = pd.DataFrame(columns=["Episodes", "Test number", "Alpha", "Epochs", "Level", "Role", "Steps", "Rewards"])
         df = df.append({
             "Episodes": arglist.number_training,
             "Test number": arglist.game_play,
             "Alpha": arglist.learning_rate,
+            "Epochs": arglist.epochs,
             "Level": arglist.level,
             "Role": arglist.role,
             "Steps": steps,

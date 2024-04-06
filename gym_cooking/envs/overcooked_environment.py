@@ -801,8 +801,20 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             if agent.name == agent_name:
                 if agent.holding:
-                    # If holding anything, can move anywhere
-                    return actions
+                    for subtask in self.subtasks_left:
+                        if isinstance(subtask, recipe.Deliver):
+                            # If holding anything, can move anywhere except delivery without objects
+                            _, goal_obj = nav_utils.get_subtask_obj(subtask)
+                            if agent.holding != goal_obj:
+                                for action in actions:
+                                    if isinstance(self.nextLocationBase(action, agent.location), Delivery):
+                                        continue
+                                    else:
+                                        legal_actions.append(action)
+                            else:
+                                return actions
+                        
+                    return list(set(legal_actions))
                 else:
                     for action in actions:
                         if self.world.is_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action))):

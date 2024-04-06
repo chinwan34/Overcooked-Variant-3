@@ -61,6 +61,7 @@ def parse_arguments():
     parser.add_argument("--learning-rate", default=0.00025, type=float, help="Learning rate of DQN")
     parser.add_argument("--game-play", default=2, type=int, help="Number of game play")
     parser.add_argument("--num-nodes", default=64, type=int, help="Number of nodes in each layer of DQN")
+    parser.add_argument("--epochs", default=10, type=int, help="The number episodes in neural network fitting")
 
 
     return parser.parse_args()
@@ -289,7 +290,7 @@ def dqn_main(arglist):
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
     # Main running algorithm
-    dqnClass.run(dqn_agents, dlreward_file)
+    # dqnClass.run(dqn_agents, dlreward_file)
 
     dones = []
     rewards = []

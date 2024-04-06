@@ -7,10 +7,15 @@ import sys
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="for parsing")
-    parser.add_argument("--reward-episodes", action="store_true", default="False", help="Reward-episodes graph")
-    parser.add_argument("--reward-legend", action="store_true", default="False", help="Average reward")
-    parser.add_argument("--timesteps-legend", action="store_true", default="False", help="Average TimeSteps")
-    parser.add_argument("--reward-alpha", action="store_true", default="False", help="Reward to alpha")
+    parser.add_argument("--reward-episodes", action="store_true", default=False, help="Reward-episodes graph")
+    parser.add_argument("--timestep-episodes", action="store_true", default=False, help="Timestep-episodes graph")
+    parser.add_argument("--reward-legend", action="store_true", default=False, help="Average reward")
+    parser.add_argument("--epsilon-graph", action="store_true", default=False, help="Epsilon decay over timesteps")
+    parser.add_argument("--timestep-role", action="store_true", default=False, help="Timestep against role")
+    parser.add_argument("--epoch-reward", action="store_true", default=False, help="Epoch to reward barplot")
+    parser.add_argument("--reward-alpha", action="store_true", default=False, help="Reward to alpha")
+
+    # Only for epsilon-graph and reward-legend
     parser.add_argument("--lr", type=float, default=0.00025, help="Only for reward legend, learning rate of simulation")
     parser.add_argument("--replay", type=int, default=4, help="Only for reward legend, replay step")
     parser.add_argument("--numTraining", type=int, default=10, help="Only for reward legend, number of episodes")
@@ -25,7 +30,7 @@ def main_loop():
     if not os.path.exists(path_save):
         os.makedirs(path_save)
     
-    if arglist.reward_legend:
+    if arglist.reward_legend or arglist.epsilon_graph:
         df = import_data(arglist, reward=True)
     else:
         df = import_data(arglist, reward=False)
@@ -72,7 +77,7 @@ def plot_graph(df, arglist, path_save):
         try:
             score = df['currScore']
             plt.plot(range(len(score)), score)
-            plt.xlabel("Episodes")
+            plt.xlabel("Episodes ran")
             plt.ylabel("reward")
             plt.savefig(os.path.join(path_save, 'reward-legend-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
                 arglist.lr,
@@ -86,9 +91,28 @@ def plot_graph(df, arglist, path_save):
             print("No current score yet. Please simulate first.")
             sys.exit(1)
 
+    if arglist.epsilon_graph:
+        plt.figure(figsize=(10, 10))
+        try:
+            epsilon = df['epsilon']
+            plt.plot(range(len(epsilon)), epsilon)
+            plt.xlabel("Episodes ran")
+            plt.ylabel("epsilon")
+            plt.show()
+            # plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
+            #     arglist.lr,
+            #     arglist.replay,
+            #     arglist.numTraining,
+            #     arglist.role,
+            # )))
+        except KeyError:
+            print("No epsilon found. Please simulate first.")
+            sys.exit(1)
+        
         return
+        
 
-    if arglist.reward_episodes:
+    if arglist.timestep_episodes:
         plt.figure(figsize=(10,10))
         try:
             steps = df['Steps']
@@ -103,13 +127,60 @@ def plot_graph(df, arglist, path_save):
         plt.ylabel("steps")
         plt.savefig(os.path.join(path_save, 'steps-episodes-legend.png'), dpi="figure")
         
+        print("Completed timestep episodes graph storage.")
+        plt.close()
+    
+    if arglist.reward_episodes:
+        plt.figure(figsize=(10, 10))
+        try:
+            reward = df['Rewards']
+            episodes = df['Episodes']
+        except KeyError:
+            print("No rewards or episodes found.")
+            sys.exit(1)
+        
+        plt.bar(episodes, reward)
+        plt.xlabel("episodes")
+        plt.ylabel("rewards")
+        plt.savefig(os.path.join(path_save, 'reward-episodes-legend.png'), dpi="figure")
+
         print("Completed reward episodes graph storage.")
         plt.close()
+            
 
-    if arglist.timesteps_legend:
-        pass
-    if arglist.reward_alpha:
-        pass
+    if arglist.timestep_role:
+        plt.figure(figsize=(10,10))
+        try:
+            steps = df['Steps']
+            role = df['Role']
+        except KeyError:
+            print("No steps or role found")
+            sys.exit(1)
+        
+        plt.bar(role, steps)
+        plt.xlabel("role")
+        plt.ylabel("steps")
+        plt.savefig(os.path.join(path_save, 'steps-role-legend.png'), dpi="figure")
+
+        print("Completed role timestep graph storage.")
+        plt.close()
+    
+    if arglist.epoch_reward:
+        plt.figure(figsize=(10,10))
+        try:
+            epochs = df["epochs"]
+            reward = df["Rewards"]
+        except KeyError:
+            print("No epoch of reward found")
+            sys.exit(1)
+
+        plt.bar(epochs, reward)
+        plt.xlabel("epochs")
+        plt.ylabel("rewards")
+        plt.savefig(os.path.join(path_save, 'epochs-rewards-legend.png'), dpi="figure")
+
+        print("Completed epochs timestep graph storage.")
+        plt.close()
 
 
 if __name__ == "__main__":

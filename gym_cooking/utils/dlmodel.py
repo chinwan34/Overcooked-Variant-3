@@ -13,6 +13,7 @@ class DLModel:
         self.action_sizes = action_sizes
         self.name = name
         self.alpha = arglist.learning_rate
+        self.epochs = arglist.epochs
         self.num_nodes = arglist.num_nodes
         self.model = self.build_and_compile_model()
         self.targetModel = self.build_and_compile_model()
@@ -77,6 +78,7 @@ class DLModel:
             epochs: Number of times the training continues
             verbose: The logging level
         """
+        epochs = self.epochs
         self.model.fit(X, y, batch_size=len(X), epochs=epochs, verbose=verbose)
 
     def max_Q_action(self, state, legalActions, target=False):
@@ -96,6 +98,7 @@ class DLModel:
                 continue
             else:
                 if finalList[i] > maxValue:
+                    maxValue = finalList[i]
                     maxIndex = i
         return maxIndex
 
@@ -103,4 +106,4 @@ class DLModel:
         """
         Save the model to the filename
         """
-        self.model.save(self.name)
+        self.model.save_weights(self.name)
