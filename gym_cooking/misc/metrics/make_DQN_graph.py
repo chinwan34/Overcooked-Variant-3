@@ -19,7 +19,10 @@ def parse_arguments():
     parser.add_argument("--lr", type=float, default=0.00025, help="Only for reward legend, learning rate of simulation")
     parser.add_argument("--replay", type=int, default=4, help="Only for reward legend, replay step")
     parser.add_argument("--numTraining", type=int, default=10, help="Only for reward legend, number of episodes")
-    parser.add_argument("--role", type=str, default="none", help="Only for reward legend, role for simulation")
+    parser.add_argument("--role", type=str, default=None, help="Only for reward legend, role for simulation")
+
+    # For the other ones, please specify the level
+    parser.add_argument("--level", type=str, default="very-easy_tomato", help="The level for graph")
     return parser.parse_args()
 
 def main_loop():
@@ -90,6 +93,7 @@ def plot_graph(df, arglist, path_save):
         except KeyError:
             print("No current score yet. Please simulate first.")
             sys.exit(1)
+        return
 
     if arglist.epsilon_graph:
         plt.figure(figsize=(10, 10))
@@ -98,34 +102,43 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(epsilon)), epsilon)
             plt.xlabel("Episodes ran")
             plt.ylabel("epsilon")
-            plt.show()
-            # plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
-            #     arglist.lr,
-            #     arglist.replay,
-            #     arglist.numTraining,
-            #     arglist.role,
-            # )))
+            plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
+                arglist.lr,
+                arglist.replay,
+                arglist.numTraining,
+                arglist.role,
+            )))
         except KeyError:
             print("No epsilon found. Please simulate first.")
             sys.exit(1)
-        
         return
-        
 
+    # See if level is specified
+    try:
+        dfNew = df[df['Level'] == arglist.level]
+    except AttributeError:
+        print("Please specify level, exiting")
+        sys.exit(1)
+    
+    # Other types of graphs 
     if arglist.timestep_episodes:
         plt.figure(figsize=(10,10))
         try:
-            steps = df['Steps']
-            episodes = df['Episodes']
+            df_te = dfNew.groupby('Episodes')['Steps'].max().reset_index()
+            df_te.columns = ["Episodes", "Steps"]
+            steps = df_te['Steps']
+            episodes = df_te['Episodes']
+            episodes = list(episode for episode in episodes)
+            episodes.sort()
+            episodes = list(str(episode) for episode in episodes)
         except KeyError:
             print("No steps or episodes column found.")
             sys.exit(1)
 
-        plt.plot(episodes, steps)
-        plt.scatter(episodes, steps)
+        plt.bar(episodes, steps)
         plt.xlabel("episodes")
         plt.ylabel("steps")
-        plt.savefig(os.path.join(path_save, 'steps-episodes-legend.png'), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'steps-episodes-legend-{}.png'.format(arglist.level)), dpi="figure")
         
         print("Completed timestep episodes graph storage.")
         plt.close()
@@ -133,8 +146,13 @@ def plot_graph(df, arglist, path_save):
     if arglist.reward_episodes:
         plt.figure(figsize=(10, 10))
         try:
-            reward = df['Rewards']
-            episodes = df['Episodes']
+            df_re = dfNew.groupby('Episodes')['Rewards'].max().reset_index()
+            df_re.columns = ["Episodes", "Rewards"]
+            reward = df_re['Rewards']
+            episodes = df_re['Episodes']
+            episodes = list(episode for episode in episodes)
+            episodes.sort()
+            episodes = list(str(episode) for episode in episodes)
         except KeyError:
             print("No rewards or episodes found.")
             sys.exit(1)
@@ -142,17 +160,18 @@ def plot_graph(df, arglist, path_save):
         plt.bar(episodes, reward)
         plt.xlabel("episodes")
         plt.ylabel("rewards")
-        plt.savefig(os.path.join(path_save, 'reward-episodes-legend.png'), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'reward-episodes-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed reward episodes graph storage.")
         plt.close()
             
-
     if arglist.timestep_role:
         plt.figure(figsize=(10,10))
         try:
-            steps = df['Steps']
-            role = df['Role']
+            df_tr = dfNew.groupby('Role')['Steps'].max().reset_index()
+            df_tr.columns = ["Role", "Steps"]
+            steps = df_tr['Steps']
+            role = df_tr['Role']
         except KeyError:
             print("No steps or role found")
             sys.exit(1)
@@ -160,7 +179,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(role, steps)
         plt.xlabel("role")
         plt.ylabel("steps")
-        plt.savefig(os.path.join(path_save, 'steps-role-legend.png'), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'steps-role-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed role timestep graph storage.")
         plt.close()
@@ -168,16 +187,21 @@ def plot_graph(df, arglist, path_save):
     if arglist.epoch_reward:
         plt.figure(figsize=(10,10))
         try:
-            epochs = df["epochs"]
-            reward = df["Rewards"]
+            df_er = dfNew.groupby('Epochs')['Rewards'].max().reset_index()
+            df_er.columns = ["Epochs", "Rewards"]
+            epochs = df_er["Epochs"]
+            epochs = list(epoch for epoch in epochs)
+            epochs.sort()
+            epochs = list(str(epoch) for epoch in epochs)
+            reward = df_er["Rewards"]
         except KeyError:
-            print("No epoch of reward found")
+            print("No epoch or reward found")
             sys.exit(1)
 
         plt.bar(epochs, reward)
         plt.xlabel("epochs")
         plt.ylabel("rewards")
-        plt.savefig(os.path.join(path_save, 'epochs-rewards-legend.png'), dpi="figure")
+        plt.savefig(os.path.join(path_save, 'epochs-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed epochs timestep graph storage.")
         plt.close()
