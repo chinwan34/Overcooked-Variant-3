@@ -1,13 +1,6 @@
 # Overcooked! - Develop diverse cooking tasks for multi-agent cooperation – Variant 3
 
 For KCL BSc Computer Science (Artificial Intelligence) Dissertation
-
-Contents:
-
-- [Abstract](#0.Abstract)
-- [Installation](#1.installation)
-- [Bayesian Delegation](#2.BayesianDelegation)
-- [DQN](#3.DQN)
 <!-- - [Environments and Recipes](docs/environments.md)
 - [Design and Customization](docs/design.md) -->
 
@@ -135,7 +128,7 @@ The command line structure is similar to the BD algorithm, but with very differe
 python main.py --num-agents <number> --level <level name> --role <role name> --number-training <number> --game-play <number> --dqn
 ```
 
-The `--number-training` specifies the number of episodes for the agents, and the `--game-play` represents the number of simulation after training. Some other commands that are optional include:
+The `--number-training` specifies the number of episodes for the agents, and the `--game-play` represents the number of simulation after training. As there will be error if specifying with `--number-training 0`, please comment out the `dqnClass.run(dqn_agents, dlreward_file)` while specifying the number of trainings the model undertook for only testing. Some other commands that are optional include:
 
 - `--batch-size` for the sampling from UER memory,
 - `--num-nodes` for the number of neurons in the FNN,
@@ -145,3 +138,29 @@ The `--number-training` specifies the number of episodes for the agents, and the
 It is also possible to set the `--record` after for visualisation; however, it is reset after every episode, so may not be as useful as in BD algorithm.
 
 ### 3.2 Results Generation
+
+The graph generation for DQN are not component-based, but rather type-based to specify the particular graph for generation. Please enter the gym_cooking/misc/metrics first before starting the graph generation. There are two main types of graphs for generation:
+
+1.Cumulative statistics: These statistics are stored during the simulation of the algorithm, which consists of significant amount of data, and are in line plot format:
+```
+python make_DQN_graph.py --reward-legend --lr <Learing rate> --replay <Replay step> --numTraining <number of episodes> --role <Type of role>
+```
+Please note that as there were no specifications for `--level`, it is recommended to utilize different parameters to simulate different levels for easier categorisation. 
+
+The above command of `--reward-legend` can be replaced with either of the following:
+- `--reward-legend` for plotting the reward over all of the time steps ran
+- `--epsilon-graph` for plotting the epsilon decay over all of the time steps ran
+
+2.Summary statistics: These statistics are based on the results of the testing after the training episode. It is in barplot format, and can be called with the following:
+```
+python make_DQN_graph.py --reward-episodes --level <Level name>
+```
+
+The above command `--reward-episodes` can be replaced with any of the following:
+- `--reward-episodes` for plotting the effect of episodes on rewards
+- `--timestep-episodes` for plotting the effect of episodes on average time steps 
+- `--timestep-role` for plotting the effect of role allocation on average time steps
+- `--reward-role` for plotting the effect of role allocation on average rewards
+- `--epoch-reward` for plotting the effect of epochs on training on average rewards
+
+All of the graphs will be stored in the dqn_graphs folder.

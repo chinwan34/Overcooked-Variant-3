@@ -84,6 +84,8 @@ class mainAlgorithm:
                     maxScore = rewardTotal
             
             if episode % 100 == 0:
+                if not os.path.exists("utils/dqn_result"):
+                    os.makedirs("utils/dqn_result")
                 df = pd.DataFrame(rewards, columns=['currScore'])
                 df['epsilon'] = epsilons
                 df.to_csv(dlreward_file)
