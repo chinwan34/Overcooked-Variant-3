@@ -396,6 +396,7 @@ class OvercookedEnvironment(gym.Env):
         # States, rewards, done
         done = self.done()
         reward = self.dqn_reward()
+        print(reward)
 
         # Remove a subtask
         self.subtask_reduction()
@@ -552,12 +553,16 @@ class OvercookedEnvironment(gym.Env):
             The minimum distance between required objects
         """
         food_locations = self.get_all_food_plate_location()
+        alphabetClassPair = {"Fish": Fish, "Chicken": FriedChicken, "Tomato": Tomato,
+                             "Lettuce": Lettuce, "Cheese": Cheese, "PizzaDough": PizzaDough,
+                             "Onion": Onion, "BurgerMeat": BurgerMeat}
 
         if isinstance(subtask, Chop):
+            toMatch = alphabetClassPair[subtask.args[0]]
             totalDistance = 0
             allPlates = self.world.get_object_locs_particular("Cutboard")
             for i in range(len(food_locations)):
-                if type(food_locations[i][0]) == Tomato or type(food_locations[i][0]) == Lettuce or type(food_locations[i][0]) == Cheese or type(food_locations[i][0]) == Onion: 
+                if food_locations[i][0] == toMatch: 
                     (currX, currY) = food_locations[i][1]
                     minDistance = float("inf")
                     for j in range(len(allPlates)):
@@ -569,10 +574,11 @@ class OvercookedEnvironment(gym.Env):
             return totalDistance
 
         if isinstance(subtask, Cook):
+            toMatch = alphabetClassPair[subtask.args[0]]
             totalDistance = 0
             allCookingPan = self.world.get_object_locs_particular("CookingPan")
             for i in range(len(food_locations)):
-                if type(food_locations[i][0]) == BurgerMeat:
+                if food_locations[i][0] == toMatch:
                     (currX, currY) = food_locations[i][1]
                     minDistance = float("inf")
                     for j in range(len(allCookingPan)):
@@ -584,10 +590,11 @@ class OvercookedEnvironment(gym.Env):
             return totalDistance
         
         if isinstance(subtask, Fry):
+            toMatch = alphabetClassPair[subtask.args[0]]
             totalDistance = 0
             allFryer = self.world.get_object_locs_particular("Fryer")
             for i in range(len(food_locations)):
-                if type(food_locations[i][0]) == Fish or type(food_locations[i][0]) == FriedChicken:
+                if food_locations[i][0] == toMatch:
                     (currX, currY) = food_locations[i][1]
                     minDistance = float("inf")
                     for j in range(len(allFryer)):
@@ -599,10 +606,11 @@ class OvercookedEnvironment(gym.Env):
             return totalDistance
         
         if isinstance(subtask, Bake):
+            toMatch = alphabetClassPair[subtask.args[0]]
             totalDistance = 0
             allOven = self.world.get_object_locs_particular("PizzaOven")
             for i in range(len(food_locations)):
-                if type(food_locations[i][0]) == PizzaDough:
+                if food_locations[i][0] == toMatch:
                     (currX, currY) = food_locations[i][1]
                     minDistance = float("inf")
                     for j in range(len(allOven)):
@@ -613,7 +621,6 @@ class OvercookedEnvironment(gym.Env):
                     totalDistance += minDistance
             return totalDistance
 
-
         if isinstance(subtask, Merge):
             maxDistance = 0
             for i in range(len(food_locations)):
@@ -623,7 +630,7 @@ class OvercookedEnvironment(gym.Env):
                         maxDistance = tempDistance
             return maxDistance
         
-        elif isinstance(subtask, Deliver):
+        if isinstance(subtask, Deliver):
             _, goal_obj = nav_utils.get_subtask_obj(subtask)
             delivery_loc = list(filter(lambda o: o.name=='Delivery', self.world.get_object_list()))[0].location
             goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)

@@ -10,7 +10,7 @@ class mainAlgorithm:
         self.arglist = arglist
         self.environment = environment
         self.num_training = self.arglist.number_training
-        self.max_timestep = self.arglist.max_num_timesteps
+        self.max_timestep = self.arglist.max_dqn_timesteps
         self.filling_step = 0
         self.update_step = self.arglist.replay
         self.final_episodes = 5

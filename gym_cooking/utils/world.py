@@ -327,13 +327,8 @@ class World:
         
         listUsed = [('Cutboard', Cutboard), ('CookingPan', CookingPan), ('Fryer', Fryer),
                     ('PizzaOven', PizzaOven)]
-        typeUsed = None
-        for match in listUsed:
-            if match[0] == name:
-                typeUsed = match[1]
-                break
         
-        return list(map(lambda o: o.location, list(filter(lambda o: typeUsed == o,
+        return list(map(lambda o: o.location, list(filter(lambda o: name == o.name,
                 self.objects[name]))))
 
     def get_object_locs(self, obj, is_held):

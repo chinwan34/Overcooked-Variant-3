@@ -62,6 +62,7 @@ def parse_arguments():
     parser.add_argument("--game-play", default=2, type=int, help="Number of game play")
     parser.add_argument("--num-nodes", default=64, type=int, help="Number of nodes in each layer of DQN")
     parser.add_argument("--epochs", default=10, type=int, help="The number episodes in neural network fitting")
+    parser.add_argument("--max-dqn-timesteps", default=60, type=int, help="Number of steps for simulation")
 
 
     return parser.parse_args()
