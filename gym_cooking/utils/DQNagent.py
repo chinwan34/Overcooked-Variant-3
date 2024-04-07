@@ -59,6 +59,7 @@ class DQNAgent:
         Return:
             The maximum action number for update
         """
+        print(self.plausibleActions)
         value = random.randint(0, 1)
         if value < self.epsilon:
             return random.choice(self.plausibleActions)

@@ -870,6 +870,17 @@ class OvercookedEnvironment(gym.Env):
                             else:
                                 return actions
                         
+                        else:
+                            final_actions = []
+                            for action in actions:
+                                if self.world.is_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action))):
+                                    listUsed = self.world.get_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action)))
+                                    if mergeable(agent.holding, listUsed[0]):
+                                        final_actions.append(action)
+                                else:
+                                    final_actions.append(action)
+                            return final_actions
+                        
                     return list(set(legal_actions))
                 else:
                     for action in actions:

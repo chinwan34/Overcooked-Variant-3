@@ -316,11 +316,24 @@ class World:
     # PROJECT INVOLED THIS FUNCTION CHANGE
     def get_object_locs_particular(self, name):
         """
+        Get the particular object's location
+        Args:
+            name: The object name
+        Return:
+            Location of the object
         """
         if name not in self.objects.keys():
             return []
         
-        return list(map(lambda o: o.location, list(filter(lambda o: Cutboard == o,
+        listUsed = [('Cutboard', Cutboard), ('CookingPan', CookingPan), ('Fryer', Fryer),
+                    ('PizzaOven', PizzaOven)]
+        typeUsed = None
+        for match in listUsed:
+            if match[0] == name:
+                typeUsed = match[1]
+                break
+        
+        return list(map(lambda o: o.location, list(filter(lambda o: typeUsed == o,
                 self.objects[name]))))
 
     def get_object_locs(self, obj, is_held):
@@ -381,6 +394,22 @@ class World:
         objs = list(filter(lambda o: o.location == location and (isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate)), all_objs))
         if objs: return True
         return False
+
+    # PROJECT INVOLED THIS FUNCTION CHANGE
+    def get_object_at_location(self, location):
+        """
+        Get the particular object, either Plate, Food, Object, at
+        a particular location.
+
+        Args:
+            location: Location specified for search
+        Return:
+            A list of objects at the location
+        """
+        all_objs = self.get_object_list()
+        objs = list(filter(lambda o: o.location == location and (isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate)), all_objs))
+        return objs
+
 
     def get_gridsquare_at(self, location):
         gss = list(filter(lambda o: o.location == location and\
