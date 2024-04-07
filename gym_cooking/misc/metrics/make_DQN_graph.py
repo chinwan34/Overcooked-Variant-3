@@ -82,7 +82,13 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(score)), score)
             plt.xlabel("Episodes ran")
             plt.ylabel("reward")
-            plt.savefig(os.path.join(path_save, 'reward-legend-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
+            plt.title("Reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}.png".format(
+                arglist.lr,
+                arglist.replay,
+                arglist.numTraining,
+                arglist.role,
+            ))
+            plt.savefig(os.path.join(path_save, 'reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}.png'.format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
@@ -102,7 +108,13 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(epsilon)), epsilon)
             plt.xlabel("Episodes ran")
             plt.ylabel("epsilon")
-            plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}_replay_{}-numTraining_{}-role_{}.png'.format(
+            plt.title("Epsilon Decay-lr_{}-replay_{}-numTraining_{}-role_{}".format(
+                arglist.lr,
+                arglist.replay,
+                arglist.numTraining,
+                arglist.role,
+            ))
+            plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}-replay_{}-numTraining_{}-role_{}.png'.format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
@@ -140,6 +152,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(episodes, steps, color=palette(range(len(df_te))))
         plt.xlabel("episodes")
         plt.ylabel("steps")
+        plt.title("Episodes-timestep-{}".format(arglist.level))
         plt.savefig(os.path.join(path_save, 'episodes-steps-legend-{}.png'.format(arglist.level)), dpi="figure")
         
         print("Completed timestep episodes graph storage.")
@@ -162,6 +175,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(episodes, reward, color=palette(range(len(df_re))))
         plt.xlabel("episodes")
         plt.ylabel("rewards")
+        plt.title("Episodes-reward-{}".format(arglist.level))
         plt.savefig(os.path.join(path_save, 'episodes-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed reward episodes graph storage.")
@@ -181,6 +195,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(role, steps, color=palette(range(len(df_tr))))
         plt.xlabel("role")
         plt.ylabel("steps")
+        plt.title("Role-timestep-{}".format(arglist.level))
         plt.savefig(os.path.join(path_save, 'role-steps-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed role timestep graph storage.")
@@ -200,7 +215,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(role, reward, color=palette(range(len(df_rr))))
         plt.xlabel("role")
         plt.ylabel("rewards")
-        plt.title("Reward-role")
+        plt.title("Reward-role-{}".format(arglist.level))
         plt.savefig(os.path.join(path_save, 'roles-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed role reward graph storage.")
@@ -223,6 +238,7 @@ def plot_graph(df, arglist, path_save):
         plt.bar(epochs, reward, color=palette(range(len(df_er))))
         plt.xlabel("epochs")
         plt.ylabel("rewards")
+        plt.title("Epoch-reward-{}".format(arglist.level))
         plt.savefig(os.path.join(path_save, 'epochs-rewards-legend-{}.png'.format(arglist.level)), dpi="figure")
 
         print("Completed epochs timestep graph storage.")

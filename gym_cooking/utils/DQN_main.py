@@ -30,6 +30,7 @@ class mainAlgorithm:
         rewards = []
         maxScore = float("-inf")
         epsilons = []
+
         for episode in range(self.num_training):
             print("EPISODE------------", episode, "-----------EPISODE")
             state = self.environment.reset()
