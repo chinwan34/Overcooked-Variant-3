@@ -325,11 +325,18 @@ class World:
         if name not in self.objects.keys():
             return []
         
-        listUsed = [('Cutboard', Cutboard), ('CookingPan', CookingPan), ('Fryer', Fryer),
-                    ('PizzaOven', PizzaOven)]
-        
         return list(map(lambda o: o.location, list(filter(lambda o: name == o.name,
                 self.objects[name]))))
+    
+    # PROJECT INVOLVED THIS FUNCTION CHANGE
+    def get_object_locs_status(self, name):
+        """
+        Get the particular object's location and status
+        Args:
+            name: The object name
+        Return:
+            Location and status of the object
+        """
 
     def get_object_locs(self, obj, is_held):
         if obj.name not in self.objects.keys():

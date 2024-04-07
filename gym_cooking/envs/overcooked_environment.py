@@ -271,7 +271,7 @@ class OvercookedEnvironment(gym.Env):
                     return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
                 return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def reset(self):
         self.world = World(arglist=self.arglist)
         self.recipes = []
@@ -319,7 +319,7 @@ class OvercookedEnvironment(gym.Env):
             self.update_display_DQN()
             return self.repDQN_conv
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def world_size_action_size(self):
         """
         Return the current size of the representation, and action size.
@@ -365,7 +365,7 @@ class OvercookedEnvironment(gym.Env):
                 "done": done, "termination_info": self.termination_info}
         return new_obs, reward, done, info
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_step(self, action_dict):
         """
         Perform a Q-Learning step.
@@ -417,7 +417,7 @@ class OvercookedEnvironment(gym.Env):
 
         return next_state, reward, done, info
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def subtask_reduction(self):
         """
         Remove the subtasks that are completed.
@@ -440,7 +440,7 @@ class OvercookedEnvironment(gym.Env):
             return True
         return False  
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def single_subtask_reduction(self, subtask):
         """
         Check if a subtask is completed, and whether
@@ -463,7 +463,7 @@ class OvercookedEnvironment(gym.Env):
             return True, doneCheck
         return False, doneCheck
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def role_bonus(self, subtask_agent_names, subtask):
         """
         The additional rewards if agents are holding objects within their roles.
@@ -474,16 +474,35 @@ class OvercookedEnvironment(gym.Env):
             The added bonus after checking
         """
         bonus = 0
+        alphabetClassPair = {"Fish": Fish, "Chicken": FriedChicken, "Tomato": Tomato,
+                             "Lettuce": Lettuce, "Cheese": Cheese, "PizzaDough": PizzaDough,
+                             "Onion": Onion, "BurgerMeat": BurgerMeat, "Plate": Plate}
+        
+        subtaskList = set()
+        subtaskList.add(Plate)
+        for i in range(len(subtask.args)):
+            if "-" in subtask.args[i]:
+                listUsed = subtask.args[i].split("-")
+                toMatch1 = alphabetClassPair[listUsed[i]]
+            else:
+                toMatch1 = alphabetClassPair[subtask.args[i]]
+            subtaskList.add(toMatch1)
+        
         start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
         for agent in self.sim_agents:
             if agent.name in subtask_agent_names:
                 if any([isinstance(subtask, action) for action in agent.role.probableActions]):
-                    if agent.holding == start_obj or isinstance(agent.holding, Plate): bonus += 0.02
-                    if agent.holding == goal_obj or isinstance(agent.holding, Plate): bonus += 0.05
+                    if agent.holding:
+                        for i in range(len(agent.holding.contents)):
+                            for partialTask in subtaskList:
+                                if isinstance(agent.holding.contents[i], partialTask):
+                                    bonus += 0.05
                 else:
-                    if agent.holding == start_obj: bonus -= 0.02
-                    if agent.holding == goal_obj: bonus -= 0.05
-        
+                    if agent.holding:
+                        for i in range(len(agent.holding.contents)):
+                            for partialTask in subtaskList:
+                                if isinstance(agent.holding.contents[i], partialTask):
+                                    bonus -= 0.05
         return bonus
 
     def done(self):
@@ -516,7 +535,7 @@ class OvercookedEnvironment(gym.Env):
     def reward(self):
         return 1 if self.successful else 0
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_reward(self):
         """
         Calculate the cumulative reward based on current state representation.
@@ -526,16 +545,22 @@ class OvercookedEnvironment(gym.Env):
             The final reward of this state.
         """
         reward = 0
+        tempReward = 0
         for subtask in self.subtasks_left:
             finishedSubtask, doneCheck = self.single_subtask_reduction(subtask)
             if finishedSubtask:
-                reward += 0
-                if doneCheck: reward += 2
-                return reward
+                tempReward += 0
+                if doneCheck: tempReward += 2
+                return tempReward
             else:
                 if not self.subtask_is_doable(subtask):
                     continue
-            
+
+            # Account for both agent holding and in the same position
+            if isinstance(subtask, Merge):
+                if self.distance_start_end_subtask(subtask) == 0:
+                    if not finishedSubtask:
+                        reward -= 1
             reward -= self.distance_start_end_subtask(subtask) * 1
 
             # Additional bonus for holding objects within responsibilities.
@@ -555,7 +580,7 @@ class OvercookedEnvironment(gym.Env):
         food_locations = self.get_all_food_plate_location()
         alphabetClassPair = {"Fish": Fish, "Chicken": FriedChicken, "Tomato": Tomato,
                              "Lettuce": Lettuce, "Cheese": Cheese, "PizzaDough": PizzaDough,
-                             "Onion": Onion, "BurgerMeat": BurgerMeat}
+                             "Onion": Onion, "BurgerMeat": BurgerMeat, "Plate": Plate}
 
         if isinstance(subtask, Chop):
             toMatch = alphabetClassPair[subtask.args[0]]
@@ -622,10 +647,29 @@ class OvercookedEnvironment(gym.Env):
             return totalDistance
 
         if isinstance(subtask, Merge):
+            listUsed = []
+            if "-" in subtask.args[0]:
+                listUsed = subtask.args[0].split("-")
+                toMatch1 = alphabetClassPair[listUsed[0]]
+            else:
+                toMatch1 = alphabetClassPair[subtask.args[0]]
+            
+            if "-" in subtask.args[1]:
+                listUsed = subtask.args[1].split("-")
+                toMatch2 = alphabetClassPair[listUsed[0]]
+            else:
+                toMatch2 = alphabetClassPair[subtask.args[1]]
             maxDistance = 0
+            # Assume there will only be 1 ingredient each (For simplicity)
+            # If wanting to create a level, please only use 1 ingredient, no excessive
             for i in range(len(food_locations)):
-                for j in range(i+1, len(food_locations)):
-                    tempDistance = abs(food_locations[i][1][0] - food_locations[j][1][0]) + abs(food_locations[i][1][1] - food_locations[j][1][1])
+                if food_locations[i][0] == toMatch1:
+                    (currX, currY) = food_locations[i][1]
+
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch2:
+                    (curr2X, curr2Y) = food_locations[i][1]
+                    tempDistance = abs(currX - curr2X) + abs(currY - curr2Y)
                     if tempDistance > maxDistance:
                         maxDistance = tempDistance
             return maxDistance
@@ -636,7 +680,17 @@ class OvercookedEnvironment(gym.Env):
             goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
             return abs(delivery_loc[0] - goal_obj_locs[0][0]) + abs(delivery_loc[1] - goal_obj_locs[0][1])
     
+    # PROJECT INVOLVED THIS FUNCTION CHANGE
     def subtask_is_doable(self, subtask):
+        """
+        Check if the subtask is doable in the current
+        environment.
+
+        Args:
+            subtask: The task to be evaluated
+        Return:
+            Whether the subtask is doable
+        """
         agent_locs = [agent.location for agent in list(filter(lambda a: a.name in ["agent-1", "agent-2"], self.sim_agents))]
         start_obj, goal_obj = nav_utils.get_subtask_obj(subtask=subtask)
         
@@ -876,7 +930,6 @@ class OvercookedEnvironment(gym.Env):
                                         legal_actions.append(action)
                             else:
                                 return actions
-                        
                         else:
                             final_actions = []
                             for action in actions:
@@ -885,7 +938,10 @@ class OvercookedEnvironment(gym.Env):
                                     if mergeable(agent.holding, listUsed[0]):
                                         final_actions.append(action)
                                 else:
-                                    final_actions.append(action)
+                                    if isinstance(self.nextLocationBase(action, agent.location), Delivery):
+                                        continue
+                                    else:
+                                        final_actions.append(action)
                             return final_actions
                         
                     return list(set(legal_actions))
