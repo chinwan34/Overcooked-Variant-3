@@ -139,7 +139,7 @@ It is also possible to set the `--record` after for visualisation; however, it i
 
 ### 3.2 Results Generation
 
-The graph generation for DQN are not component-based, but rather type-based to specify the particular graph for generation. Please enter the gym_cooking/misc/metrics first before starting the graph generation. There are two main types of graphs for generation:
+The graph generation for DQN are not component-based, but rather type-based to specify the particular graph for generation. Please enter the `gym_cooking/misc/metrics` first before starting the graph generation. There are two main types of graphs for generation:
 
 1.Cumulative statistics: These statistics are stored during the simulation of the algorithm, which consists of significant amount of data, and are in line plot format:
 ```

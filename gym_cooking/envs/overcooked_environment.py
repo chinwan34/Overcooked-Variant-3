@@ -544,13 +544,20 @@ class OvercookedEnvironment(gym.Env):
 
     # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def distance_start_end_subtask(self, subtask):
+        """
+        Calculate the distance between objects in a single subtask.
+        Args:
+            subtask: The task to be calculated
+        Return:
+            The minimum distance between required objects
+        """
         food_locations = self.get_all_food_plate_location()
 
         if isinstance(subtask, Chop):
             totalDistance = 0
-            allPlates = self.world.get_object_locs_cutboard()
+            allPlates = self.world.get_object_locs_particular("Cutboard")
             for i in range(len(food_locations)):
-                if type(food_locations[i][0]) == Tomato or type(food_locations[i][0]) == Lettuce:
+                if type(food_locations[i][0]) == Tomato or type(food_locations[i][0]) == Lettuce or type(food_locations[i][0]) == Cheese or type(food_locations[i][0]) == Onion: 
                     (currX, currY) = food_locations[i][1]
                     minDistance = float("inf")
                     for j in range(len(allPlates)):
@@ -560,6 +567,52 @@ class OvercookedEnvironment(gym.Env):
                             minDistance = tempDistance
                     totalDistance += minDistance
             return totalDistance
+
+        if isinstance(subtask, Cook):
+            totalDistance = 0
+            allCookingPan = self.world.get_object_locs_particular("CookingPan")
+            for i in range(len(food_locations)):
+                if type(food_locations[i][0]) == BurgerMeat:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allCookingPan)):
+                        (tempX, tempY) = allCookingPan[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+        
+        if isinstance(subtask, Fry):
+            totalDistance = 0
+            allFryer = self.world.get_object_locs_particular("Fryer")
+            for i in range(len(food_locations)):
+                if type(food_locations[i][0]) == Fish or type(food_locations[i][0]) == FriedChicken:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allFryer)):
+                        (tempX, tempY) = allFryer[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+        
+        if isinstance(subtask, Bake):
+            totalDistance = 0
+            allOven = self.world.get_object_locs_particular("PizzaOven")
+            for i in range(len(food_locations)):
+                if type(food_locations[i][0]) == PizzaDough:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allOven)):
+                        (tempX, tempY) = allOven[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+
 
         if isinstance(subtask, Merge):
             maxDistance = 0
@@ -600,6 +653,9 @@ class OvercookedEnvironment(gym.Env):
         Get positions of all food and plates. Utilized
         in the trashcan procedure in the interact.py for 
         dumping and return object locations.
+
+        Return:
+            locations of all food and plates
         """
         objs = []
         food_locations = []
