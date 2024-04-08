@@ -20,7 +20,7 @@ class World:
         self.rep = [] # [row0, row1, ..., rown]
 
         self.repDQN = []
-        self.repDQN_Conv = None # The current DQN representation
+        self.repDQN_conv = None # The current DQN representation
         self.arglist = arglist
         self.objects = defaultdict(lambda : [])
 
@@ -83,18 +83,19 @@ class World:
         Return:
             The 3D array for representation
         """
-        self.repDQN_conv = np.zeros((width, height, 4))
+        self.repDQN_conv = np.zeros((4, height, width))
         objs = []
         for o in self.objects.values():
             objs += o
         for obj in objs:
             x, y = obj.location
-            if isinstance(obj, Food) or isinstance(obj, Plate):
-                self.repDQN_conv[x, y, 0] = 1
+            if isinstance(obj, Food) or isinstance(obj, Plate) or isinstance(obj, Object):
+                self.repDQN_conv[0, y, x] += 1
             elif isinstance(obj, Floor):
-                self.repDQN_conv[x, y, 1] = 1
-            elif isinstance(obj, Counter):
-                self.repDQN_conv[x, y, 2] = 1
+                self.repDQN_conv[1, y, x] += 1
+            elif isinstance(obj, Counter) or obj.name == "Delivery" or obj.name == "Fryer" \
+                or obj.name == "CookingPan" or obj.name == "PizzaOven" or obj.name == "Sink" or obj.name == "TrashCan" or obj.name == 'Cutboard':
+                self.repDQN_conv[2, y, x] += 1
         return self.repDQN_conv
 
 

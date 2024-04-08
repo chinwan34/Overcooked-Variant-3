@@ -21,7 +21,7 @@ def parse_arguments():
     parser.add_argument("--numTraining", type=int, default=10, help="Only for reward legend, number of episodes")
     parser.add_argument("--role", type=str, default=None, help="Only for reward legend, role for simulation")
 
-    # For the other ones, please specify the level
+    # For all, please specify the level
     parser.add_argument("--level", type=str, default="very-easy_tomato", help="The level for graph")
     return parser.parse_args()
 
@@ -91,7 +91,7 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(score)), score)
             plt.xlabel("Episodes ran")
             plt.ylabel("reward")
-            plt.title("Reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}.png".format(
+            plt.title("Reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}".format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,

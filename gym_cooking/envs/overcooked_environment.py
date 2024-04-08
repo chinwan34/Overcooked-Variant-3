@@ -396,7 +396,6 @@ class OvercookedEnvironment(gym.Env):
         # States, rewards, done
         done = self.done()
         reward = self.dqn_reward()
-        print(reward)
 
         # Remove a subtask
         self.subtask_reduction()
@@ -771,7 +770,7 @@ class OvercookedEnvironment(gym.Env):
         self.repDQN_conv = self.world.update_display_dqn_conv(self.widthOfGame, self.heightOfGame)
         for agent in self.sim_agents:
             x, y = agent.location
-            self.repDQN_conv[x,y,3] = 1
+            self.repDQN_conv[3,y,x] += 1
 
     def get_agent_names(self):
         return [agent.name for agent in self.sim_agents]

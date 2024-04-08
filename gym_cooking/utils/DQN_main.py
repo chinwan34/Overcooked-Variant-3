@@ -76,7 +76,7 @@ class mainAlgorithm:
             time_steps.append(step)
             rewards.append(rewardTotal)
 
-            if episode % 100 == 0:
+            if episode % 1 == 0:
                 # maximum score update
                 if rewardTotal > maxScore:
                     for agent in agents:
@@ -92,6 +92,8 @@ class mainAlgorithm:
                 df.to_csv(dlreward_file)
             
             print("Final score:{}, Steps:{}, and whether goal reached:{}".format(rewardTotal, step, self.environment.successful))
+        
+        print("Training Finished-----------------------------------------------")
             
 
     def predict_game(self, agents):
