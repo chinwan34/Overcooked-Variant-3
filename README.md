@@ -145,7 +145,6 @@ The graph generation for DQN are not component-based, but rather type-based to s
 ```
 python make_DQN_graph.py --reward-legend --lr <Learing rate> --replay <Replay step> --numTraining <number of episodes> --role <Type of role>
 ```
-Please note that as there were no specifications for `--level`, it is recommended to utilize different parameters to simulate different levels for easier categorisation. 
 
 The above command of `--reward-legend` can be replaced with either of the following:
 - `--reward-legend` for plotting the reward over all of the time steps ran

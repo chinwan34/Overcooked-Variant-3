@@ -51,11 +51,12 @@ def import_data(arglist, reward=False):
     """
     if reward:
         try:
-            df = pd.read_csv("../../utils/dqn_reward/reward-agent-dqn-learningRate_{}-replay_{}-numTraining_{}-role_{}.csv".format(
+            df = pd.read_csv("../../utils/dqn_reward/reward-agent-dqn-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}.csv".format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
-                arglist.role
+                arglist.role,
+                arglist.level
             ))
             return df
         except FileNotFoundError:
@@ -71,7 +72,15 @@ def import_data(arglist, reward=False):
     
 
 def plot_graph(df, arglist, path_save):
-    color_palette = sns.color_palette()
+    """
+    Plot the graphs based on argument specified,
+    mainly for DQN simulation. Results are stored in dqn_graphs
+    folder in the metrics folder.
+
+    Args:
+        arglist: List of arguments for specification
+        path_save: Location to save the graphs
+    """
     sns.set_style('ticks')
     sns.set_context('talk', font_scale=1)
 
@@ -82,17 +91,19 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(score)), score)
             plt.xlabel("Episodes ran")
             plt.ylabel("reward")
-            plt.title("Reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}.png".format(
+            plt.title("Reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}.png".format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
                 arglist.role,
+                arglist.level
             ))
-            plt.savefig(os.path.join(path_save, 'reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}.png'.format(
+            plt.savefig(os.path.join(path_save, 'reward-legend-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}.png'.format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
                 arglist.role,
+                arglist.level
             )))
             print("Completed reward legend graph storage.")
             plt.close()
@@ -108,17 +119,19 @@ def plot_graph(df, arglist, path_save):
             plt.plot(range(len(epsilon)), epsilon)
             plt.xlabel("Episodes ran")
             plt.ylabel("epsilon")
-            plt.title("Epsilon Decay-lr_{}-replay_{}-numTraining_{}-role_{}".format(
+            plt.title("Epsilon Decay-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}".format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
                 arglist.role,
+                arglist.level
             ))
-            plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}-replay_{}-numTraining_{}-role_{}.png'.format(
+            plt.savefig(os.path.join(path_save, 'epsilon-decay-lr_{}-replay_{}-numTraining_{}-role_{}-level_{}.png'.format(
                 arglist.lr,
                 arglist.replay,
                 arglist.numTraining,
                 arglist.role,
+                arglist.level
             )))
         except KeyError:
             print("No epsilon found. Please simulate first.")

@@ -179,19 +179,21 @@ class mainAlgorithm:
         Return:
             Filename created
         """
-        filename1 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-agent_1.h5".format(
+        filename1 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}-agent_1.h5".format(
             "dqn", 
             self.arglist.learning_rate, 
             self.arglist.replay,
             self.arglist.number_training,
-            self.arglist.role
+            self.arglist.role,
+            self.arglist.level
         )
-        filename2 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-agent_2.h5".format(
+        filename2 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}-agent_2.h5".format(
             "dqn", 
             self.arglist.learning_rate, 
             self.arglist.replay,
             self.arglist.number_training,
-            self.arglist.role
+            self.arglist.role,
+            self.arglist.level
         )
         return [filename1, filename2]
 
@@ -201,12 +203,13 @@ class mainAlgorithm:
         Return:
             Filename created
         """
-        filename = "reward-agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}.csv".format(
+        filename = "reward-agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}.csv".format(
             "dqn", 
             self.arglist.learning_rate, 
             self.arglist.replay,
             self.arglist.number_training,
             self.arglist.role,
+            self.arglist.level
         )
         return filename
 
