@@ -34,7 +34,7 @@ class DQNAgent:
 
         self.maxEpsilon = 0.8
         self.minEpsilon = 0.02
-        self.maxExplorationSteps = 20000000
+        self.maxExplorationSteps = 200000
     
     def legal_actions(self, legalActions):
         """

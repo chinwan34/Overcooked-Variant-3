@@ -22,6 +22,7 @@ import networkx as nx
 import numpy as np
 from itertools import combinations, permutations, product
 from collections import namedtuple
+import math
 
 import gym
 from gym import error, spaces, utils
@@ -270,7 +271,7 @@ class OvercookedEnvironment(gym.Env):
                     return [CookingWaiter(), ExceptionalChefMerger(), CookingMergingWaiter()]
                 return [InvincibleWaiter(), InvincibleWaiter(), InvincibleWaiter()]
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def reset(self):
         self.world = World(arglist=self.arglist)
         self.recipes = []
@@ -318,7 +319,7 @@ class OvercookedEnvironment(gym.Env):
             self.update_display_DQN()
             return self.repDQN_conv
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def world_size_action_size(self):
         """
         Return the current size of the representation, and action size.
@@ -364,7 +365,7 @@ class OvercookedEnvironment(gym.Env):
                 "done": done, "termination_info": self.termination_info}
         return new_obs, reward, done, info
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_step(self, action_dict):
         """
         Perform a Q-Learning step.
@@ -415,7 +416,7 @@ class OvercookedEnvironment(gym.Env):
 
         return next_state, reward, done, info
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def subtask_reduction(self):
         """
         Remove the subtasks that are completed.
@@ -438,7 +439,7 @@ class OvercookedEnvironment(gym.Env):
             return True
         return False  
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def single_subtask_reduction(self, subtask):
         """
         Check if a subtask is completed, and whether
@@ -461,7 +462,7 @@ class OvercookedEnvironment(gym.Env):
             return True, doneCheck
         return False, doneCheck
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def role_bonus(self, subtask_agent_names, subtask):
         """
         The additional rewards if agents are holding objects within their roles.
@@ -472,16 +473,35 @@ class OvercookedEnvironment(gym.Env):
             The added bonus after checking
         """
         bonus = 0
+        alphabetClassPair = {"Fish": Fish, "Chicken": FriedChicken, "Tomato": Tomato,
+                             "Lettuce": Lettuce, "Cheese": Cheese, "PizzaDough": PizzaDough,
+                             "Onion": Onion, "BurgerMeat": BurgerMeat, "Plate": Plate}
+        
+        subtaskList = set()
+        subtaskList.add(Plate)
+        for i in range(len(subtask.args)):
+            if "-" in subtask.args[i]:
+                listUsed = subtask.args[i].split("-")
+                toMatch1 = alphabetClassPair[listUsed[i]]
+            else:
+                toMatch1 = alphabetClassPair[subtask.args[i]]
+            subtaskList.add(toMatch1)
+        
         start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
         for agent in self.sim_agents:
             if agent.name in subtask_agent_names:
                 if any([isinstance(subtask, action) for action in agent.role.probableActions]):
-                    if agent.holding == start_obj: bonus += 2
-                    if agent.holding == goal_obj: bonus += 5
+                    if agent.holding:
+                        for i in range(len(agent.holding.contents)):
+                            for partialTask in subtaskList:
+                                if isinstance(agent.holding.contents[i], partialTask):
+                                    bonus += 0.05
                 else:
-                    if agent.holding == start_obj: bonus -= 2
-                    if agent.holding == goal_obj: bonus -= 5
-        
+                    if agent.holding:
+                        for i in range(len(agent.holding.contents)):
+                            for partialTask in subtaskList:
+                                if isinstance(agent.holding.contents[i], partialTask):
+                                    bonus -= 0.05
         return bonus
 
     def done(self):
@@ -514,7 +534,7 @@ class OvercookedEnvironment(gym.Env):
     def reward(self):
         return 1 if self.successful else 0
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def dqn_reward(self):
         """
         Calculate the cumulative reward based on current state representation.
@@ -524,29 +544,195 @@ class OvercookedEnvironment(gym.Env):
             The final reward of this state.
         """
         reward = 0
+        tempReward = 0
         for subtask in self.subtasks_left:
             finishedSubtask, doneCheck = self.single_subtask_reduction(subtask)
             if finishedSubtask:
-                reward += 10
-                if doneCheck: reward += 20
+                tempReward += 0
+                if doneCheck: tempReward += 2
+                return tempReward
             else:
-                reward -= 1
-            start_obj, goal_obj = nav_utils.get_subtask_obj(subtask)
-            subtask_action_obj = nav_utils.get_subtask_action_obj(subtask)
-            distance = self.get_lower_bound_for_subtask_given_objs(
-                subtask, 
-                ["agent-1", "agent-2"],
-                start_obj,
-                goal_obj,
-                subtask_action_obj,
-            )
-            reward -= 0.3 * distance
+                if not self.subtask_is_doable(subtask):
+                    continue
+
+            # Account for both agent holding and in the same position
+            if isinstance(subtask, Merge):
+                if self.distance_start_end_subtask(subtask) == 0:
+                    if not finishedSubtask:
+                        reward -= 1
+            reward -= self.distance_start_end_subtask(subtask) * 1
 
             # Additional bonus for holding objects within responsibilities.
             bonus = self.role_bonus(["agent-1", "agent-2"], subtask)
             reward = reward + bonus
-        
         return reward
+
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    def distance_start_end_subtask(self, subtask):
+        """
+        Calculate the distance between objects in a single subtask.
+        Args:
+            subtask: The task to be calculated
+        Return:
+            The minimum distance between required objects
+        """
+        food_locations = self.get_all_food_plate_location()
+        alphabetClassPair = {"Fish": Fish, "Chicken": FriedChicken, "Tomato": Tomato,
+                             "Lettuce": Lettuce, "Cheese": Cheese, "PizzaDough": PizzaDough,
+                             "Onion": Onion, "BurgerMeat": BurgerMeat, "Plate": Plate}
+
+        if isinstance(subtask, Chop):
+            toMatch = alphabetClassPair[subtask.args[0]]
+            totalDistance = 0
+            allPlates = self.world.get_object_locs_particular("Cutboard")
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch: 
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allPlates)):
+                        (tempX, tempY) = allPlates[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+
+        if isinstance(subtask, Cook):
+            toMatch = alphabetClassPair[subtask.args[0]]
+            totalDistance = 0
+            allCookingPan = self.world.get_object_locs_particular("CookingPan")
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allCookingPan)):
+                        (tempX, tempY) = allCookingPan[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+        
+        if isinstance(subtask, Fry):
+            toMatch = alphabetClassPair[subtask.args[0]]
+            totalDistance = 0
+            allFryer = self.world.get_object_locs_particular("Fryer")
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allFryer)):
+                        (tempX, tempY) = allFryer[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+        
+        if isinstance(subtask, Bake):
+            toMatch = alphabetClassPair[subtask.args[0]]
+            totalDistance = 0
+            allOven = self.world.get_object_locs_particular("PizzaOven")
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch:
+                    (currX, currY) = food_locations[i][1]
+                    minDistance = float("inf")
+                    for j in range(len(allOven)):
+                        (tempX, tempY) = allOven[j]
+                        tempDistance = abs(tempX - currX) + abs(tempY - currY)
+                        if minDistance > tempDistance:
+                            minDistance = tempDistance
+                    totalDistance += minDistance
+            return totalDistance
+
+        if isinstance(subtask, Merge):
+            listUsed = []
+            if "-" in subtask.args[0]:
+                listUsed = subtask.args[0].split("-")
+                toMatch1 = alphabetClassPair[listUsed[0]]
+            else:
+                toMatch1 = alphabetClassPair[subtask.args[0]]
+            
+            if "-" in subtask.args[1]:
+                listUsed = subtask.args[1].split("-")
+                toMatch2 = alphabetClassPair[listUsed[0]]
+            else:
+                toMatch2 = alphabetClassPair[subtask.args[1]]
+            maxDistance = 0
+            # Assume there will only be 1 ingredient each (For simplicity)
+            # If wanting to create a level, please only use 1 ingredient, no excessive
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch1:
+                    (currX, currY) = food_locations[i][1]
+
+            for i in range(len(food_locations)):
+                if food_locations[i][0] == toMatch2:
+                    (curr2X, curr2Y) = food_locations[i][1]
+                    tempDistance = abs(currX - curr2X) + abs(currY - curr2Y)
+                    if tempDistance > maxDistance:
+                        maxDistance = tempDistance
+            return maxDistance
+        
+        if isinstance(subtask, Deliver):
+            _, goal_obj = nav_utils.get_subtask_obj(subtask)
+            delivery_loc = list(filter(lambda o: o.name=='Delivery', self.world.get_object_list()))[0].location
+            goal_obj_locs = self.world.get_all_object_locs(obj=goal_obj)
+            return abs(delivery_loc[0] - goal_obj_locs[0][0]) + abs(delivery_loc[1] - goal_obj_locs[0][1])
+    
+    # PROJECT INVOLVED THIS FUNCTION CHANGE
+    def subtask_is_doable(self, subtask):
+        """
+        Check if the subtask is doable in the current
+        environment.
+
+        Args:
+            subtask: The task to be evaluated
+        Return:
+            Whether the subtask is doable
+        """
+        agent_locs = [agent.location for agent in list(filter(lambda a: a.name in ["agent-1", "agent-2"], self.sim_agents))]
+        start_obj, goal_obj = nav_utils.get_subtask_obj(subtask=subtask)
+        
+        subtask_action_obj = nav_utils.get_subtask_action_obj(subtask=subtask)
+        A_locs, B_locs = self.get_AB_locs_given_objs(
+                subtask=subtask,
+                subtask_agent_names=["agent-1", "agent-2"],
+                start_obj=start_obj,
+                goal_obj=goal_obj,
+                subtask_action_obj=subtask_action_obj)
+        distance = self.world.get_lower_bound_between(
+                subtask=subtask,
+                agent_locs=tuple(agent_locs),
+                A_locs=tuple(A_locs),
+                B_locs=tuple(B_locs))
+    
+        return distance < self.world.perimeter
+
+    def get_all_food_plate_location(self):
+        """
+        Get positions of all food and plates. Utilized
+        in the trashcan procedure in the interact.py for 
+        dumping and return object locations.
+
+        Return:
+            locations of all food and plates
+        """
+        objs = []
+        food_locations = []
+        alphabetClassPair = [(Fish, 'f'), (FriedChicken, 'k'), (BurgerMeat, 'm'),
+                         (PizzaDough, 'P'), (Cheese, 'c'), (Bread, 'b'), (Onion, 'o'),
+                         (Lettuce, 'l'), (Tomato, 't'), (Plate, 'p')]
+        for o_list in self.world.objects.values():
+            for o in o_list:
+                if isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate):
+                    objs.append(o)
+        
+        for o in objs:
+            for i in range(len(o.contents)):
+                for j in range(len(alphabetClassPair)):
+                    if type(o.contents[i]) == alphabetClassPair[j][0]:
+                        food_locations.append((alphabetClassPair[j][0], o.location))
+        return food_locations
 
     def print_agents(self):
         for sim_agent in self.sim_agents:
@@ -562,7 +748,7 @@ class OvercookedEnvironment(gym.Env):
             x, y = agent.location
             self.rep[y][x] = str(agent)
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_DQN(self):
         """
         Update the display of the DQN with a list of 
@@ -575,7 +761,7 @@ class OvercookedEnvironment(gym.Env):
             self.repDQN.append(y)
             self.repDQN.append(x)
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def update_display_DQN_conv(self):
         """
         Update the display of the DQN with a 3D representation
@@ -584,7 +770,7 @@ class OvercookedEnvironment(gym.Env):
         self.repDQN_conv = self.world.update_display_dqn_conv(self.widthOfGame, self.heightOfGame)
         for agent in self.sim_agents:
             x, y = agent.location
-            self.repDQN_conv[x,y,3] = 1
+            self.repDQN_conv[3,y,x] += 1
 
     def get_agent_names(self):
         return [agent.name for agent in self.sim_agents]
@@ -702,7 +888,7 @@ class OvercookedEnvironment(gym.Env):
                 A_locs=tuple(A_locs),
                 B_locs=tuple(B_locs)) + holding_penalty
 
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def nextLocationBase(self, agent_action, currentLocation):
         """
         Return the action taken and the next gridsquare after action.
@@ -714,7 +900,7 @@ class OvercookedEnvironment(gym.Env):
         """
         return self.world.get_gridsquare_at(location=tuple(np.asarray(currentLocation) + np.asarray(agent_action)))
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def legal_actions(self, agent_name):
         """
         The current legal actions for the agent specified.
@@ -731,8 +917,33 @@ class OvercookedEnvironment(gym.Env):
         for agent in self.sim_agents:
             if agent.name == agent_name:
                 if agent.holding:
-                    # If holding anything, can move anywhere
-                    return actions
+                    for subtask in self.subtasks_left:
+                        if isinstance(subtask, recipe.Deliver):
+                            # If holding anything, can move anywhere except delivery without objects
+                            _, goal_obj = nav_utils.get_subtask_obj(subtask)
+                            if agent.holding != goal_obj:
+                                for action in actions:
+                                    if isinstance(self.nextLocationBase(action, agent.location), Delivery):
+                                        continue
+                                    else:
+                                        legal_actions.append(action)
+                            else:
+                                return actions
+                        else:
+                            final_actions = []
+                            for action in actions:
+                                if self.world.is_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action))):
+                                    listUsed = self.world.get_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action)))
+                                    if mergeable(agent.holding, listUsed[0]):
+                                        final_actions.append(action)
+                                else:
+                                    if isinstance(self.nextLocationBase(action, agent.location), Delivery):
+                                        continue
+                                    else:
+                                        final_actions.append(action)
+                            return final_actions
+                        
+                    return list(set(legal_actions))
                 else:
                     for action in actions:
                         if self.world.is_object_at_location(location=tuple(np.asarray(agent.location) + np.asarray(action))):
@@ -782,7 +993,7 @@ class OvercookedEnvironment(gym.Env):
             execute[1] = False
         return execute
     
-     # PROJECT INVOLVED THIS FUNCTION CHANGE.
+    # PROJECT INVOLVED THIS FUNCTION CHANGE.
     def is_collision_alter(self, agent1_loc, agent2_loc, agent1_action, agent2_action):
         """
         Check if the collision still occurs without the constraints of agent

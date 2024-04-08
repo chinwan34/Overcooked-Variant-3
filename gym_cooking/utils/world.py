@@ -20,7 +20,7 @@ class World:
         self.rep = [] # [row0, row1, ..., rown]
 
         self.repDQN = []
-        self.repDQN_Conv = None # The current DQN representation
+        self.repDQN_conv = None # The current DQN representation
         self.arglist = arglist
         self.objects = defaultdict(lambda : [])
 
@@ -83,18 +83,19 @@ class World:
         Return:
             The 3D array for representation
         """
-        self.repDQN_conv = np.zeros((width, height, 4))
+        self.repDQN_conv = np.zeros((4, height, width))
         objs = []
         for o in self.objects.values():
             objs += o
         for obj in objs:
             x, y = obj.location
-            if isinstance(obj, Food) or isinstance(obj, Plate):
-                self.repDQN_conv[x, y, 0] = 1
+            if isinstance(obj, Food) or isinstance(obj, Plate) or isinstance(obj, Object):
+                self.repDQN_conv[0, y, x] += 1
             elif isinstance(obj, Floor):
-                self.repDQN_conv[x, y, 1] = 1
-            elif isinstance(obj, Counter):
-                self.repDQN_conv[x, y, 2] = 1
+                self.repDQN_conv[1, y, x] += 1
+            elif isinstance(obj, Counter) or obj.name == "Delivery" or obj.name == "Fryer" \
+                or obj.name == "CookingPan" or obj.name == "PizzaOven" or obj.name == "Sink" or obj.name == "TrashCan" or obj.name == 'Cutboard':
+                self.repDQN_conv[2, y, x] += 1
         return self.repDQN_conv
 
 
@@ -313,6 +314,21 @@ class World:
     def is_collidable(self, location):
         return location in list(map(lambda o: o.location, list(filter(lambda o: o.collidable, self.get_object_list()))))
 
+    # PROJECT INVOLED THIS FUNCTION CHANGE
+    def get_object_locs_particular(self, name):
+        """
+        Get the particular object's location
+        Args:
+            name: The object name
+        Return:
+            Location of the object
+        """
+        if name not in self.objects.keys():
+            return []
+        
+        return list(map(lambda o: o.location, list(filter(lambda o: name == o.name,
+                self.objects[name]))))
+
     def get_object_locs(self, obj, is_held):
         if obj.name not in self.objects.keys():
             return []
@@ -371,6 +387,22 @@ class World:
         objs = list(filter(lambda o: o.location == location and (isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate)), all_objs))
         if objs: return True
         return False
+
+    # PROJECT INVOLED THIS FUNCTION CHANGE
+    def get_object_at_location(self, location):
+        """
+        Get the particular object, either Plate, Food, Object, at
+        a particular location.
+
+        Args:
+            location: Location specified for search
+        Return:
+            A list of objects at the location
+        """
+        all_objs = self.get_object_list()
+        objs = list(filter(lambda o: o.location == location and (isinstance(o, Object) or isinstance(o, Food) or isinstance(o, Plate)), all_objs))
+        return objs
+
 
     def get_gridsquare_at(self, location):
         gss = list(filter(lambda o: o.location == location and\

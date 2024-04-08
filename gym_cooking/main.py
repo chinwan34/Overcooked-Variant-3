@@ -61,6 +61,8 @@ def parse_arguments():
     parser.add_argument("--learning-rate", default=0.00025, type=float, help="Learning rate of DQN")
     parser.add_argument("--game-play", default=2, type=int, help="Number of game play")
     parser.add_argument("--num-nodes", default=64, type=int, help="Number of nodes in each layer of DQN")
+    parser.add_argument("--epochs", default=10, type=int, help="The number episodes in neural network fitting")
+    parser.add_argument("--max-dqn-timesteps", default=60, type=int, help="Number of steps for simulation")
 
 
     return parser.parse_args()
@@ -221,7 +223,7 @@ def initialize_agents(arglist, state_size=0, action_size=0, dlmodel=None):
                         color=COLORS[len(dqn_agents)],
                         role=roleList[index],
                         agent_index=len(dqn_agents),
-                        dlmodel_name=dlmodel
+                        dlmodel_name=dlmodel[index]
                     )
                     dqn_agents.append(dqn_agent)
                     if len(dqn_agents) >= arglist.num_agents:
@@ -283,11 +285,13 @@ def dqn_main(arglist):
 
     # Set file name at utils/dqn_result
     dlmodel_file = dqnClass.set_filename(dqnClass.filename_create_dlmodel())
+    dlreward_file = dqnClass.set_filename_reward(dqnClass.filename_create_reward())
+    dlstatistics_file = dqnClass.filename_create_statistics()
     state_size, action_size = env.world_size_action_size()
     dqn_agents = initialize_agents(arglist, state_size, action_size, dlmodel_file)
 
     # Main running algorithm
-    dqnClass.run(dqn_agents)
+    dqnClass.run(dqn_agents, dlreward_file)
 
     dones = []
     rewards = []
@@ -300,9 +304,12 @@ def dqn_main(arglist):
         rewards.append(reward)
         time_steps.append(step)
     
-    print("Average score: ", sum(rewards)/len(rewards))
-    print("Success Rate: ", dones.count(True)/len(dones))
-    print("Average Time-step", sum(time_steps)/len(time_steps))
+    if arglist.game_play > 0:
+        print("Average score: ", sum(rewards)//len(rewards))
+        print("Success Rate: ", dones.count(True)//len(dones))
+        print("Average Time-step", sum(time_steps)//len(time_steps))
+
+        dqnClass.store_statistics(dlstatistics_file, sum(time_steps)//len(time_steps), sum(rewards)//len(rewards), arglist)
 
 if __name__ == '__main__':
     arglist = parse_arguments()

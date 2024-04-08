@@ -1,6 +1,6 @@
 import numpy as np
-import random
-from utils.DQNagent import DQNAgent
+import pandas as pd
+import os
 
 class mainAlgorithm:
     """
@@ -10,12 +10,12 @@ class mainAlgorithm:
         self.arglist = arglist
         self.environment = environment
         self.num_training = self.arglist.number_training
-        self.max_timestep = self.arglist.max_num_timesteps
+        self.max_timestep = self.arglist.max_dqn_timesteps
         self.filling_step = 0
         self.update_step = self.arglist.replay
         self.final_episodes = 5
 
-    def run(self, agents):
+    def run(self, agents, dlreward_file):
         """
         The simulation procedure, with arguments
         specified. After all simulations finished, the relevant 
@@ -23,11 +23,14 @@ class mainAlgorithm:
 
         Args:
             agents: The DQNAgents for simulation and update
+            dlreward_file: Filename for storing rewards on this run
         """
         time_steps = []
         all_step = 0
         rewards = []
         maxScore = float("-inf")
+        epsilons = []
+
         for episode in range(self.num_training):
             print("EPISODE------------", episode, "-----------EPISODE")
             state = self.environment.reset()
@@ -68,17 +71,29 @@ class mainAlgorithm:
                 step += 1
                 state = next_state
             
+            epsilons.append(agents[0].epsilon)
+            
             time_steps.append(step)
             rewards.append(rewardTotal)
 
-            if episode % 10 == 0:
+            if episode % 1 == 0:
                 # maximum score update
                 if rewardTotal > maxScore:
                     for agent in agents:
-                        print("Got in episode for updates")
+                        print("GOT IN FOR UPDATES!!!!!!!!")
                         agent.dlmodel.save_model()               
                     maxScore = rewardTotal
+            
+            if episode % 100 == 0:
+                if not os.path.exists("utils/dqn_result"):
+                    os.makedirs("utils/dqn_result")
+                df = pd.DataFrame(rewards, columns=['currScore'])
+                df['epsilon'] = epsilons
+                df.to_csv(dlreward_file)
+            
             print("Final score:{}, Steps:{}, and whether goal reached:{}".format(rewardTotal, step, self.environment.successful))
+        
+        print("Training Finished-----------------------------------------------")
             
 
     def predict_game(self, agents):
@@ -144,7 +159,20 @@ class mainAlgorithm:
         Return:
             The file name
         """
-        file = './utils/dqn_result/{}'.format(filename)
+        file1 = './utils/dqn_result/{}'.format(filename[0])
+        file2 = './utils/dqn_result/{}'.format(filename[1])
+        return [file1, file2]
+    
+    def set_filename_reward(self, filename):
+        """
+        Set the filename for the rewards accumulated.
+
+        Args:
+            filename: The name specified for storage
+        Return:
+            The file name
+        """
+        file = './utils/dqn_reward/{}'.format(filename)
         return file
     
     def filename_create_dlmodel(self):
@@ -153,21 +181,84 @@ class mainAlgorithm:
         Return:
             Filename created
         """
-        filename = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}.h5".format(
+        filename1 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}-agent_1.h5".format(
             "dqn", 
             self.arglist.learning_rate, 
             self.arglist.replay,
             self.arglist.number_training,
             self.arglist.role,
+            self.arglist.level
+        )
+        filename2 = "agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}-agent_2.h5".format(
+            "dqn", 
+            self.arglist.learning_rate, 
+            self.arglist.replay,
+            self.arglist.number_training,
+            self.arglist.role,
+            self.arglist.level
+        )
+        return [filename1, filename2]
+
+    def filename_create_reward(self):
+        """
+        Create the reward file of the model.
+        Return:
+            Filename created
+        """
+        filename = "reward-agent-{}-learningRate_{}-replay_{}-numTraining_{}-role_{}-level_{}.csv".format(
+            "dqn", 
+            self.arglist.learning_rate, 
+            self.arglist.replay,
+            self.arglist.number_training,
+            self.arglist.role,
+            self.arglist.level
         )
         return filename
 
-
-
-
-
-
+    def filename_create_statistics(self):
+        """
+        Create the statistics file of the model.
+        Return:
+            Filename created
+        """
+        filename = "./utils/dqn_reward/statistics_file.csv"
+        return filename
     
-    
+    def store_statistics(self, filename, steps, rewards, arglist):
+        """
+        Store the statistics after simulation into a csv file.
+        
+        Args:
+            filename: The file name for statistic storage
+            steps: Average steps for simulation result
+            rewards: Average rewards for simulation result
+            arglist: List of arguments specified
+        """
+        if not os.path.exists("utils/dqn_reward"):
+            os.makedirs("utils/dqn_reward")
+        try:
+            df = pd.read_csv(filename, index_col=0)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=["Episodes", "Test number", "Alpha", "Epochs", "Level", "Role", "Steps", "Rewards"])
+        df = df.append({
+            "Episodes": arglist.number_training,
+            "Test number": arglist.game_play,
+            "Alpha": arglist.learning_rate,
+            "Epochs": arglist.epochs,
+            "Level": arglist.level,
+            "Role": arglist.role,
+            "Steps": steps,
+            "Rewards": rewards
+        }, ignore_index=True)
 
+        df.to_csv(filename)
+
+    def filename_create_graphs(self, filename):
+        """
+        Create the graphs file of the model.
+        Return:
+            Filename created
+        """
+        filename = "./utils/dqn_reward/statistics_file.csv"
+        return filename
 
